@@ -35,12 +35,14 @@
   --rectangle-text-border: #333;
   --rectangle-caption-border: red;
 
+  --power3-in: cubic-bezier(0.52, 0, 0.74, 0);
+  --power3-out: cubic-bezier(0.26, 1, 0.48, 1);
+  --power3-in-out: cubic-bezier(0.76, 0, 0.24, 1);
 
-  --power3: cubic-bezier(0.26, 1, 0.48, 1);
 }
 
 html.dark {
-  --bg-color: #ffffff;
+  --bg-color: #cfcfcf;
   --app-bg-color: #101113;
   --text-color: #d1d1d1;
 
@@ -74,7 +76,8 @@ body {
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  background-color: var(--bg-color);
+  background-color: var(--app-bg-color);
+
   color: var(--text-color);
 }
 

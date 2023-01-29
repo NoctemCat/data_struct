@@ -30,7 +30,7 @@ const lastItemInMap = <K, T>(map: Map<K, T>): [K, T] => Array.from(map).pop()!;
 const lastKeyInMap = <K>(map: Map<K, any>): K => Array.from(map.keys()).pop()!;
 const lastValueInMap = <V>(map: Map<any, V>): V => Array.from(map.values()).pop()!;
 
-const getRandomItemArray = <T>(array: ArrayLike<T>) => {
+const getRandomItemArray = <T>(array: ArrayLike<T>): T => {
   return array[Math.floor(Math.random() * array.length)];
 };
 

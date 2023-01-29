@@ -67,9 +67,17 @@ const changePos = () => {
 };
 
 const switchEdge = () => {
-  edgeFuncs.update(getRandomItemArray(edges.value), {
-    b: getRandomItemArray(circles.value),
-  });
+  const edge = getRandomItemArray(edges.value);
+  const newb = Math.random() > 0.5 ? getRandomItemArray(circles.value) : getRandomItemArray(rects.value);
+  if (edge?.b) {
+    if (edge.b !== newb) {
+      edgeFuncs.update(edge, {
+        b: newb,
+      });
+    } else {
+      switchEdge();
+    }
+  }
 };
 
 const switchCircle = () => {
@@ -242,11 +250,7 @@ const {
   isActive: _,
 } = useIntervalFn(() => {
   switchEdge();
-  if (Math.random() > 0.5) {
-    switchCircle();
-  } else {
-    switchRectangle();
-  }
+  Math.random() > 0.5 ? switchCircle() : switchRectangle();
 }, 100);
 
 const test = ref<HTMLDivElement | null>(null);
@@ -416,7 +420,7 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
         <button
           id="closeCotrols"
           ref="closeControls"
-          class="hidden"
+          class=""
           @mouseenter="topControlEnter"
           @focus="topControlEnter"
           @click="closeControlsFun"
@@ -576,7 +580,6 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
       stroke-width: 1.5;
 
       stroke-dasharray: 100;
-      //transition: stroke-dashoffset ease-in-out 2.5s;
       stroke-dashoffset: 100;
     }
   }
@@ -584,7 +587,7 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
 .hidden {
   :deep(svg) {
     path {
-      animation: hide 1s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+      animation: hide 1s var(--power3-in) forwards;
     }
 
     @keyframes hide {
@@ -601,7 +604,7 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
 .shown {
   :deep(svg) {
     path {
-      animation: show 1s cubic-bezier(0.645, 0.045, 0.355, 1) forwards;
+      animation: show 1s var(--power3-out) forwards;
     }
 
     @keyframes show {
@@ -619,6 +622,7 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
   max-height: 0;
   overflow: hidden;
   transition: all 0.2s ease-in-out;
+  background: var(--bg-color);
 }
 </style>
 

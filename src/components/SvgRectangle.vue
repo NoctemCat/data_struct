@@ -94,7 +94,7 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .js-scale-group rect,
 .js-scale-group text {
-  transition: fill var(--circle-dur) var(--power3), stroke var(--circle-dur) var(--power3),
-    bx var(--circle-dur) var(--power3), by var(--circle-dur) var(--power3);
+  transition: fill var(--circle-dur) var(--power3-in), stroke var(--circle-dur) var(--power3-in),
+    bx var(--circle-dur) var(--power3-in), by var(--circle-dur) var(--power3-in);
 }
 </style>

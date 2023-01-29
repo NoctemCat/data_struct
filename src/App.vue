@@ -26,6 +26,10 @@ import { RouterView } from 'vue-router';
   transform: translateY(-30px);
 }
 
+body {
+  background-color: var(--bg-color);
+}
+
 #app {
   display: flex;
   flex-direction: column;
