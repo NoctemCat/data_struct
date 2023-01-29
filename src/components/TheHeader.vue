@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import IconSun from '@/components/icons/IconSun.vue';
 import IconMoon from '@/components/icons/IconMoon.vue';
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { onMounted, Transition } from 'vue';
 import { RouterLink } from 'vue-router';
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 import { toRefs, TransitionGroup } from 'vue';
 import SvgCircle from '@/components/SvgCircle.vue';
 import SvgEdge from '@/components/SvgEdge.vue';
@@ -13,10 +14,12 @@ const props = defineProps<{
 
 const { circles, rects, edges } = toRefs(props);
 
-const edgeOnLeave = (_el: Element, done: () => void) => {
+const animDuration = 1;
+
+const animOnLeave = (_el: Element, done: () => void) => {
   setTimeout(() => {
     done();
-  }, 500);
+  }, animDuration * 1000);
 };
 </script>
 
@@ -28,7 +31,7 @@ const edgeOnLeave = (_el: Element, done: () => void) => {
     >
       <TransitionGroup
         :css="false"
-        @leave="edgeOnLeave"
+        @leave="animOnLeave"
       >
         <SvgEdge
           v-for="edge in edges"
@@ -39,8 +42,8 @@ const edgeOnLeave = (_el: Element, done: () => void) => {
     </g>
     <g id="vertex">
       <TransitionGroup
-        name="circles"
-        appear
+        :css="false"
+        @leave="animOnLeave"
       >
         <SvgCircle
           v-for="circle in circles"
@@ -51,8 +54,8 @@ const edgeOnLeave = (_el: Element, done: () => void) => {
     </g>
     <g id="rects">
       <TransitionGroup
-        name="circles"
-        appear
+        :css="false"
+        @leave="animOnLeave"
       >
         <SvgRectangle
           v-for="rect in rects"
@@ -103,15 +106,5 @@ const edgeOnLeave = (_el: Element, done: () => void) => {
     font-weight: 700;
     text-anchor: middle;
   }
-}
-
-.circles-enter-active,
-.circles-leave-active {
-  transition: all 0.5s ease;
-}
-
-.circles-enter-from,
-.circles-leave-to {
-  opacity: 0;
 }
 </style>

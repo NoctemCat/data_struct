@@ -10,23 +10,23 @@ import type { Point, ValidObjects } from '@/utility/types';
 import { useThrottleFn, useIntervalFn, useMouse } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import gsap from 'gsap';
-import { onMounted, ref, toRefs, watch } from 'vue';
-import { useI18n } from 'vue-i18n';
+import { onMounted, ref, toRefs, watch, type Ref } from 'vue';
+//import { useI18n } from 'vue-i18n';
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 
-const { circles } = storeToRefs(useLListCircleStore());
+const { circles } = storeToRefs(useLListCircleStore()) as { circles: Ref<Circle[]> };
 const { circleFuncs } = useLListCircleStore();
 const { edges } = storeToRefs(useLListEdgesStore());
 const { edgeFuncs } = useLListEdgesStore();
 const { rects } = storeToRefs(useLListRectsStore());
 const { rectsFuncs } = useLListRectsStore();
 
-const { t } = useI18n({ useScope: 'local' });
+//const { t } = useI18n({ useScope: 'local' });
 
-let xCur = 4 * rem.value;
+//let xCur = 4 * rem.value;
 
-const { x: xMouse, y: yMouse, sourceType } = useMouse();
+const { x: xMouse, y: yMouse } = useMouse();
 
 const getRandomPos = () => {
   const newX = 4 * rem.value + Math.random() * 48 * rem.value;
@@ -35,26 +35,35 @@ const getRandomPos = () => {
 };
 
 const changePos = () => {
-  const el = edgeFuncs.getByIndex(3)?.b;
-  switch (el?.objType) {
-    case 'Circle':
-      circleFuncs.update(el as Circle, {
-        x: el.x + 10,
-        y: el.y + 10,
-        caption: el.caption === 'tail' ? 'test string' : 'tail',
-      });
-      break;
-    case 'Rectangle':
-      rectsFuncs.update(el as Rectangle, {
-        x: el.x + 10,
-        y: el.y + 10,
-        caption: el.caption === 'tail' ? 'test string' : 'tail',
-      });
-      break;
-  }
+  //const el = edgeFuncs.getByIndex(3)?.b;
+  //switch (el?.objType) {
+  //  case 'Circle':
+  //    circleFuncs.update(el as Circle, {
+  //      x: el.x + 10,
+  //      y: el.y + 10,
+  //      caption: el.caption === 'tail' ? 'test string' : 'tail',
+  //    });
+  //    break;
+  //  case 'Rectangle':
+  //    rectsFuncs.update(el as Rectangle, {
+  //      x: el.x + 10,
+  //      y: el.y + 10,
+  //      caption: el.caption === 'tail' ? 'test string' : 'tail',
+  //    });
+  //    break;
+  //}
 
-  const edge = edgeFuncs.getByIndex(0);
-  edge!.color = edge!.color === '#333' ? '#eee' : '#333';
+  //const edge = edgeFuncs.getByIndex(0);
+  //edge!.color = edge!.color === '#333' ? '#eee' : '#333';
+
+  const circle = getRandomItemArray(circles.value);
+
+  circleFuncs.update(circle, {
+    x: circle.x + 10,
+    y: circle.y + 10,
+    caption: circle.caption === 'tail' ? 'test string' : 'tail',
+    fillColor: circle.fillColor === '#333' ? '#eee' : '#333',
+  });
 };
 
 const switchEdge = () => {
@@ -64,13 +73,15 @@ const switchEdge = () => {
 };
 
 const switchCircle = () => {
-  circleFuncs.update(getRandomItemArray(circles.value), {
+  const circle = getRandomItemArray(circles.value);
+  circleFuncs.update(circle, {
     ...getRandomPos(),
   });
 };
 
 const switchRectangle = () => {
-  rectsFuncs.update(getRandomItemArray(rects.value), {
+  const rect = getRandomItemArray(rects.value);
+  rectsFuncs.update(rect, {
     ...getRandomPos(),
   });
 };
@@ -101,7 +112,7 @@ const addRandomHead = (caption: string) => {
   };
 
   const newCircle = circleFuncs.add(circle);
-  xCur += 64;
+  //xCur += 64;
   return newCircle;
 };
 const addRandomRect = (caption: string) => {
@@ -123,7 +134,7 @@ const addRandomRect = (caption: string) => {
   };
 
   const newCircle = rectsFuncs.add(rect);
-  xCur += 64;
+  //xCur += 64;
   return newCircle;
 };
 
@@ -150,10 +161,10 @@ const addRandom = () => {
     const last = edgeFuncs.getByIndex(edges.value.length - 1)!;
     const prevEl = last.b;
 
-    prevEl.caption = '';
+    prevEl!.caption = '';
 
     const curCircle = Math.random() > 0.5 ? addRandomHead('tail') : addRandomRect('tail');
-    createEdge(prevEl, curCircle);
+    createEdge(prevEl!, curCircle);
   } else {
     Math.random() > 0.5 ? addRandomHead('head') : addRandomRect('head');
   }
@@ -162,13 +173,13 @@ const addRandom = () => {
 const deleteLast = () => {
   //circleFuncs.removeLast();
   if (edges.value.length > 0) {
-    xCur -= 64;
+    //xCur -= 64;
     const lastEdge = edgeFuncs.getByIndex(edges.value.length - 1)!;
 
-    lastEdge.a.caption = 'tail';
+    lastEdge.a!.caption = 'tail';
     edgeFuncs.removeLast();
 
-    if (lastEdge.b.objType === 'Circle') circleFuncs.removeLast();
+    if (lastEdge.b!.objType === 'Circle') circleFuncs.removeLast();
     else rectsFuncs.removeLast();
   } else {
     edgeFuncs.removeLast();
@@ -177,45 +188,46 @@ const deleteLast = () => {
   }
 };
 
-const deleteLast2 = () => {
+function delay(time: number) {
+  return new Promise((resolve) => setTimeout(resolve, time));
+}
+
+const deleteRecursively = async (done: () => void) => {
   if (edges.value.length > 0) {
     const lastEdge = edgeFuncs.getByIndex(edges.value.length - 1)!;
     edgeFuncs.removeLast();
 
-    if (lastEdge.b.objType === 'Circle') circleFuncs.removeLast();
-    else rectsFuncs.removeLast();
+    if (lastEdge.b && lastEdge.b.objType === 'Circle') circleFuncs.removeLast();
+    else if (lastEdge.b) rectsFuncs.removeLast();
+
+    await delay(100);
+    deleteRecursively(done);
   } else {
-    edgeFuncs.removeLast();
-    circleFuncs.removeLast();
-    rectsFuncs.removeLast();
+    if (circles.value.length > 0) {
+      circleFuncs.removeLast();
+      await delay(100);
+      deleteRecursively(done);
+    } else if (rects.value.length > 0) {
+      rectsFuncs.removeLast();
+      await delay(100);
+      deleteRecursively(done);
+    } else {
+      done();
+    }
   }
 };
 
 let currentlyResetting = false;
-const reset = (done: () => void) => {
+const reset = async (done: () => void) => {
   if (currentlyResetting) return true;
-  currentlyResetting = true;
-  const intervalTime = 100;
-  let resetInterval = setInterval(() => deleteLast2(), intervalTime);
-  setTimeout(() => {
-    clearInterval(resetInterval);
-    currentlyResetting = false;
-    //circleFuncs.reset();
-    //edgeFuncs.reset();
-    //rectsFuncs.reset();
-
-    done();
-  }, intervalTime * edges.value.length + 500);
-
-  //xCur = 64;
-  return currentlyResetting;
+  await deleteRecursively(done);
 };
 const resetThr = useThrottleFn(reset, 400);
 
 const closeControls = ref<HTMLButtonElement | null>(null);
 const controlsContent = ref<HTMLDivElement | null>(null);
 const selectCategory = () => {
-  console.log(edges.value);
+  //console.log(edges.value);
   closeControls.value?.classList.remove('hidden');
   closeControls.value?.classList.add('shown');
 
@@ -224,7 +236,11 @@ const selectCategory = () => {
   }
 };
 
-const { pause, resume, isActive } = useIntervalFn(() => {
+const {
+  pause,
+  resume,
+  isActive: _,
+} = useIntervalFn(() => {
   switchEdge();
   if (Math.random() > 0.5) {
     switchCircle();

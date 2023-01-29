@@ -10,9 +10,13 @@ const edge = toRef(props, 'edge');
 
 const copyId: string = structuredClone(toRaw(edge.value.id));
 const edgeColor = reactive({ color: edge.value.color });
-const duration = 1;
+const duration = 1.2;
+const easeFunc = 'power3';
 
-const calculateDPath = (a: Point, b: Point) => {
+const calculateDPath = (a?: Point, b?: Point) => {
+  if (!a || !b) {
+    return { firstDot: { x: 0, y: 0 }, secondDot: { x: 0, y: 0 } };
+  }
   const firstDot = a.objType === 'Circle' ? pointOnCircle(a as Circle, b) : pointOnRect(a as Rectangle, b);
   const secondDot = b.objType === 'Circle' ? pointOnCircle(b as Circle, a) : pointOnRect(b as Rectangle, a);
 
@@ -45,19 +49,19 @@ onBeforeUnmount(() => {
     gsap.to(`#edgeForward${copyId}`, {
       attr: { d: begPathAdj },
       duration: duration,
-      ease: 'elastic',
+      ease: easeFunc,
     });
   }
   if (edge.value.backward) {
     gsap.to(`#edgeBackward${copyId}`, {
       attr: { d: begPath },
       duration: duration,
-      ease: 'elastic',
+      ease: easeFunc,
     });
   }
 });
 
-watch([edge.value, edge.value.a, edge.value.b], (_newCircles) => {
+watch([edge.value, edge.value.a, edge.value.b], (_) => {
   const { firstDot: first, secondDot: second } = calculateDPath(edge.value.a, edge.value.b);
 
   const newEndForwPath = `M${second.x},${second.y}L${first.x},${first.y}`;
@@ -67,14 +71,14 @@ watch([edge.value, edge.value.a, edge.value.b], (_newCircles) => {
     gsap.to(`#edgeForward${copyId}`, {
       attr: { d: newEndForwPath },
       duration: duration,
-      ease: 'elastic',
+      ease: easeFunc,
     });
   }
   if (edge.value.backward) {
     gsap.to(`#edgeBackward${copyId}`, {
       attr: { d: newEndBackPath },
       duration: duration,
-      ease: 'elastic',
+      ease: easeFunc,
     });
   }
 });

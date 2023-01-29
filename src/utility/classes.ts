@@ -103,8 +103,8 @@ let edgeMaxId = 0;
 class Edge {
   objType: ValidObjects = 'Edge';
   id: string;
-  a: Point;
-  b: Point;
+  a?: Point;
+  b?: Point;
   forward = true;
   backward = false;
   color = 'var(--edge-color)';

@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, toRef, toRefs, watch } from 'vue';
+import { onBeforeUnmount, onMounted, ref, toRaw, toRef, toRefs, watch } from 'vue';
 import gsap from 'gsap';
 import type { Circle } from '@/utility/classes';
 import { ScreenInfoKey } from '@/utility/symbols';
@@ -9,148 +9,80 @@ const { rem } = toRefs(injectStrict(ScreenInfoKey));
 
 const props = defineProps<{ circle: Circle }>();
 const circle = toRef(props, 'circle');
-const copyId: string = circle.value.id;
+const copy: Circle = structuredClone(toRaw(circle.value));
 
 const duration = 1;
+const easing = 'power3';
+
+const groupRef = ref<SVGGElement | null>(null);
+const circleRef = ref<SVGCircleElement | null>(null);
+
+let xTo: gsap.QuickToFunc | undefined;
+let yTo: gsap.QuickToFunc | undefined;
+let rTo: gsap.QuickToFunc | undefined;
 
 onMounted(() => {
+  xTo = gsap.quickTo(groupRef.value, 'x', { duration: duration, ease: easing });
+  yTo = gsap.quickTo(groupRef.value, 'y', { duration: duration, ease: easing });
+  rTo = gsap.quickTo(circleRef.value, 'r', { duration: duration, ease: easing });
+
   gsap.fromTo(
-    `#group${copyId} > *`,
+    groupRef.value,
     { scale: 0, transformOrigin: '50% 50%' },
-    { scale: 1, transformOrigin: '50% 50%', duration: duration, ease: 'elastic' },
+    { scale: 1, transformOrigin: '50% 50%', duration: duration, ease: easing },
   );
-  gsap.fromTo(
-    `#group${copyId} > .circle`,
-    {
-      attr: {
-        cx: circle.value.x,
-        cy: circle.value.y,
-        r: circle.value.radius,
-        fill: circle.value.fillColor,
-        stroke: circle.value.borderColor,
-      },
-    },
-    {
-      attr: {
-        cx: circle.value.x,
-        cy: circle.value.y,
-        r: circle.value.radius,
-        fill: circle.value.fillColor,
-        stroke: circle.value.borderColor,
-      },
+});
 
-      duration: duration,
-    },
-  );
-
-  gsap.fromTo(
-    `#group${copyId} > .circle-text`,
-    {
-      attr: {
-        x: circle.value.x,
-        y: circle.value.y,
-        fill: circle.value.textColor,
-      },
-    },
-    {
-      attr: {
-        x: circle.value.x,
-        y: circle.value.y + (rem.value * 2) / 6,
-        fill: circle.value.textColor,
-      },
-
-      duration: duration,
-    },
-  );
-
-  gsap.fromTo(
-    `#group${copyId} > .circle-caption`,
-    {
-      attr: {
-        x: circle.value.x,
-        y: circle.value.y,
-        fill: circle.value.captionColor,
-      },
-    },
-    {
-      attr: {
-        x: circle.value.x,
-        y: circle.value.y + circle.value.radius + rem.value,
-        fill: circle.value.captionColor,
-      },
-
-      duration: duration,
-    },
-  );
+watch(circle.value, (_) => {
+  if (rTo) {
+    xTo!(circle.value.x - copy.x);
+    yTo!(circle.value.y - copy.y);
+    rTo(circle.value.radius);
+  }
 });
 
 onBeforeUnmount(() => {
-  gsap.to(`#group${copyId} > *`, { scale: 0, transformOrigin: '50% 50%', duration: duration });
-});
-
-watch(circle.value, (_newCircle) => {
-  gsap.to(`#group${copyId} > circle`, {
-    attr: {
-      cx: circle.value.x,
-      cy: circle.value.y,
-      r: circle.value.radius,
-      fill: circle.value.fillColor,
-      stroke: circle.value.borderColor,
-    },
-    duration: duration,
-    ease: 'elastic',
-  });
-
-  gsap.to(`#group${copyId} > .circle-text`, {
-    attr: {
-      x: circle.value.x,
-      y: circle.value.y + (rem.value * 2) / 6,
-      fill: circle.value.textColor,
-    },
-
-    duration: duration,
-    ease: 'elastic',
-  });
-
-  gsap.to(`#group${copyId} > .circle-caption`, {
-    attr: {
-      x: circle.value.x,
-      y: circle.value.y + circle.value.radius + rem.value,
-      fill: circle.value.captionColor,
-    },
-
-    duration: duration,
-    ease: 'elastic',
-  });
+  gsap.to(groupRef.value, { scale: 0, transformOrigin: '50% 50%', duration: duration, ease: easing });
 });
 </script>
 
 <template>
-  <g :id="`group${copyId}`">
-    <circle
-      class="circle"
-      cx="0"
-      cy="0"
-      r="0"
-      stroke-width="2"
-    />
-    <text
-      class="circle-text"
-      x="0"
-      y="0"
-      fill="#333"
-    >
-      {{ circle.text }}
-    </text>
-    <text
-      class="circle-caption"
-      x="0"
-      y="0"
-      fill="#333"
-    >
-      {{ circle.caption }}
-    </text>
+  <g
+    :id="`group${copy.id}`"
+    class="js-scale-group"
+    :style="`--circle-dur: ${duration}s`"
+  >
+    <g ref="groupRef">
+      <circle
+        ref="circleRef"
+        :cx="copy.x"
+        :cy="copy.y"
+        :r="copy.radius"
+        :fill="circle.fillColor"
+        :stroke="circle.borderColor"
+        stroke-width="2"
+      />
+      <text
+        :x="copy.x"
+        :y="copy.y + (rem * 2) / 6"
+        :fill="circle.textColor"
+      >
+        {{ circle.text }}
+      </text>
+      <text
+        :x="copy.x"
+        :y="copy.y + copy.radius + rem"
+        :fill="circle.captionColor"
+      >
+        {{ circle.caption }}
+      </text>
+    </g>
   </g>
 </template>
 
-<style lang="scss"></style>
+<style lang="scss" scoped>
+.js-scale-group circle,
+.js-scale-group text {
+  transition: fill var(--circle-dur) var(--power3), stroke var(--circle-dur) var(--power3);
+}
+</style>
