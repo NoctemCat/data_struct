@@ -33,7 +33,7 @@ onMounted(() => {
   );
 });
 
-watch(circle.value, (_) => {
+watch(props, (_) => {
   if (rTo) {
     xTo!(circle.value.x - copy.x);
     yTo!(circle.value.y - copy.y);

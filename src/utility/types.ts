@@ -2,6 +2,7 @@ type ValidObjects = 'Circle' | 'Rectangle' | 'Edge';
 
 type Point = {
   objType: Omit<ValidObjects, 'Edge'>;
+  id: string;
   x: number;
   y: number;
   radius?: number;
@@ -9,8 +10,6 @@ type Point = {
   height?: number;
   caption?: string;
 };
-
-type Step = { id: string; type: 'add | update | delete'; origValues: [] };
 
 type ScreenInfo = {
   width: number;

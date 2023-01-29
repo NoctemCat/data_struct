@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TheHeader from '@/components/TheHeader.vue';
+//import { watch } from "vue";
 import { RouterView } from 'vue-router';
 </script>
 

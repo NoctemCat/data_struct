@@ -2,25 +2,26 @@
 import SvgCanvas from '@/components/SvgCanvas.vue';
 import IconClose from '@/components/icons/IconClose.vue';
 
-import { useLListCircleStore, useLListEdgesStore, useLListRectsStore } from '@/stores/linkedlist';
-import type { Circle, Rectangle, RectangleVars } from '@/utility/classes';
+import { useLListStore } from '@/stores/linkedlist';
+import type { Circle, Rectangle } from '@/utility/classes';
 import { getRandomItemArray, injectStrict } from '@/utility/functions';
 import { ScreenInfoKey } from '@/utility/symbols';
 import type { Point, ValidObjects } from '@/utility/types';
 import { useThrottleFn, useIntervalFn, useMouse } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import gsap from 'gsap';
-import { onMounted, ref, toRefs, watch, type Ref } from 'vue';
+import { onMounted, ref, toRefs, watch } from 'vue';
 //import { useI18n } from 'vue-i18n';
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 
-const { circles } = storeToRefs(useLListCircleStore()) as { circles: Ref<Circle[]> };
-const { circleFuncs } = useLListCircleStore();
-const { edges } = storeToRefs(useLListEdgesStore());
-const { edgeFuncs } = useLListEdgesStore();
-const { rects } = storeToRefs(useLListRectsStore());
-const { rectsFuncs } = useLListRectsStore();
+const { circles, rects, edges, history } = storeToRefs(useLListStore());
+
+//const circles = toRef(circleHolder.value, 'elems');
+//const rects = toRef(rectHolder.value, 'elems');
+//const edges = toRef(edgeHolder.value, 'elems');
+
+const { circleFuncs, rectsFuncs, edgeFuncs, undo, redo, printState } = useLListStore();
 
 //const { t } = useI18n({ useScope: 'local' });
 
@@ -35,35 +36,26 @@ const getRandomPos = () => {
 };
 
 const changePos = () => {
-  //const el = edgeFuncs.getByIndex(3)?.b;
-  //switch (el?.objType) {
-  //  case 'Circle':
-  //    circleFuncs.update(el as Circle, {
-  //      x: el.x + 10,
-  //      y: el.y + 10,
-  //      caption: el.caption === 'tail' ? 'test string' : 'tail',
-  //    });
-  //    break;
-  //  case 'Rectangle':
-  //    rectsFuncs.update(el as Rectangle, {
-  //      x: el.x + 10,
-  //      y: el.y + 10,
-  //      caption: el.caption === 'tail' ? 'test string' : 'tail',
-  //    });
-  //    break;
-  //}
+  const newX = Math.random() * 10 - 5;
+  const newY = Math.random() * 10 - 5;
 
-  //const edge = edgeFuncs.getByIndex(0);
-  //edge!.color = edge!.color === '#333' ? '#eee' : '#333';
-
-  const circle = getRandomItemArray(circles.value);
-
-  circleFuncs.update(circle, {
-    x: circle.x + 10,
-    y: circle.y + 10,
-    caption: circle.caption === 'tail' ? 'test string' : 'tail',
-    fillColor: circle.fillColor === '#333' ? '#eee' : '#333',
-  });
+  if (Math.random() > 0.5) {
+    const circle = getRandomItemArray(circles.value);
+    circleFuncs.update(circle, {
+      x: circle.x + newX,
+      y: circle.y + newY,
+      caption: circle.caption === 'tail' ? 'test string' : 'tail',
+      fillColor: circle.fillColor === '#333' ? '#eee' : '#333',
+    });
+  } else {
+    const rect = getRandomItemArray(rects.value);
+    rectsFuncs.update(rect, {
+      x: rect.x + newX,
+      y: rect.y + newY,
+      caption: rect.caption === 'tail' ? 'test string' : 'tail',
+      fillColor: rect.fillColor === '#333' ? '#eee' : '#333',
+    });
+  }
 };
 
 const switchEdge = () => {
@@ -131,8 +123,8 @@ const addRandomRect = (caption: string) => {
 
   const { x, y } = getRandomPos();
 
-  const rect: RectangleVars = {
-    objType: 'Rectangle',
+  const rect = {
+    objType: 'Rectangle' as ValidObjects,
     x: x,
     y: y,
     width: newWidth,
@@ -344,6 +336,10 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
     controlsContent.value.style.maxHeight = '';
   }
 };
+
+const printHistory = () => {
+  console.log(history.value);
+};
 </script>
 
 <template>
@@ -449,7 +445,17 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
 
         <button @click="resume()">start</button>
         <button @click="pause()">stop</button>
+
+        <button @click="undo()">undo</button>
+        <button @click="redo()">redo</button>
+        <button @click="printState()">print state</button>
+        <button @click="printHistory()">print history</button>
       </div>
+    </div>
+    <div>
+      <div>Circles {{ circles.length }}</div>
+      <div>Rectsangles {{ rects.length }}</div>
+      <div>Edges {{ edges.length }}</div>
     </div>
     <!--<div class="timeline"></div>-->
   </div>

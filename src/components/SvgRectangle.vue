@@ -40,7 +40,7 @@ onMounted(() => {
   );
 });
 
-watch(rectangle.value, (_) => {
+watch(props, (_) => {
   if (widthTo) {
     xTo!(rectangle.value.x - copy.x);
     yTo!(rectangle.value.y - copy.y);

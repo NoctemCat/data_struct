@@ -1,6 +1,5 @@
 import { inject, type InjectionKey } from 'vue';
-import type { Circle, Rectangle } from './classes';
-import type { Point, ValidObjects } from './types';
+import type { ValidObjects } from './types';
 
 const deepClone = <T>(obj: T): T => {
   if (obj === null || typeof obj !== 'object') return obj;
@@ -57,10 +56,6 @@ const isValidObject = (objString: string): objString is ValidObjects => {
   }
 };
 
-const toPoint = (el: Circle | Rectangle): Point => {
-  return { objType: el.objType, x: el.x, y: el.y };
-};
-
 //const _ =
 export {
   deepClone,
@@ -72,5 +67,4 @@ export {
   convertRemToPixels,
   injectStrict,
   isValidObject,
-  toPoint,
 };
