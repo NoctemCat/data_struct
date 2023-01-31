@@ -56,6 +56,55 @@ const isValidObject = (objString: string): objString is ValidObjects => {
   }
 };
 
+const delay = (time: number) => {
+  return new Promise((resolve) => setTimeout(resolve, time));
+};
+
+const easeType = {
+  inQuad: (t: number, b: number, c: number, d: number) => {
+    t /= d;
+    return c * t * t + b;
+  },
+  outQuad: (t: number, b: number, c: number, d: number) => {
+    t /= d;
+    return -c * t * (t - 2) + b;
+  },
+  linear: (t: number, b: number, c: number, d: number) => {
+    return (c * t) / d + b;
+  },
+};
+
+const triggerWithEaseFunc = (
+  duration: number,
+  times: number,
+  ease: (t: number, b: number, c: number, d: number) => number,
+  callback: (...args: any) => void,
+  done: (...args: any) => void,
+) => {
+  let last = 0;
+  for (let currentFrame = 0; currentFrame < times; currentFrame += 1) {
+    const delay = ease(currentFrame, 0, duration, times);
+    setTimeout(callback, delay);
+    last = delay;
+  }
+  setTimeout(done, last + 100);
+};
+const triggerWithEase = {
+  custom: (
+    duration: number,
+    times: number,
+    ease: (t: number, b: number, c: number, d: number) => number,
+    callback: (...args: any) => void,
+    done: (...args: any) => void,
+  ) => triggerWithEaseFunc(duration, times, ease, callback, done),
+  inQuad: (duration: number, times: number, callback: (...args: any) => void, done: (...args: any) => void) =>
+    triggerWithEaseFunc(duration, times, easeType.inQuad, callback, done),
+  outQuad: (duration: number, times: number, callback: (...args: any) => void, done: (...args: any) => void) =>
+    triggerWithEaseFunc(duration, times, easeType.outQuad, callback, done),
+  linear: (duration: number, times: number, callback: (...args: any) => void, done: (...args: any) => void) =>
+    triggerWithEaseFunc(duration, times, easeType.linear, callback, done),
+};
+
 //const _ =
 export {
   deepClone,
@@ -67,4 +116,6 @@ export {
   convertRemToPixels,
   injectStrict,
   isValidObject,
+  delay,
+  triggerWithEase,
 };

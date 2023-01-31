@@ -115,10 +115,6 @@ type LinkedLStoreRawType = {
 };
 
 export const useLListStore = defineStore('linkedlist', () => {
-  //const circleHolder: { elems: Circle[]; maxId: number } = { elems: [], maxId: 0 };
-  //const rectHolder: { elems: Rectangle[]; maxId: number } = { elems: [], maxId: 0 };
-  //const edgeHolder: { elems: Edge[]; maxId: number } = { elems: [], maxId: 0 };
-
   const storeState = ref<LListStoreType>({
     circleHolder: { elems: [] as Circle[], maxId: 0 },
     rectHolder: { elems: [] as Rectangle[], maxId: 0 },
@@ -156,8 +152,8 @@ export const useLListStore = defineStore('linkedlist', () => {
   };
 
   const { history, commit, undo, redo } = useRefHistory(storeState, {
-    flush: 'post',
     deep: true,
+    capacity: 100,
     dump: dumpHistory,
     parse: parseHistory,
   });

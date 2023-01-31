@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, toRaw, toRef, toRefs, watch } from 'vue';
+import { onBeforeUnmount, onMounted, onUpdated, ref, toRaw, toRef, toRefs, unref, watch } from 'vue';
 import gsap from 'gsap';
 import type { Circle } from '@/utility/classes';
 import { ScreenInfoKey } from '@/utility/symbols';
@@ -12,7 +12,7 @@ const circle = toRef(props, 'circle');
 const copy: Circle = structuredClone(toRaw(circle.value));
 
 const duration = 1;
-const easing = 'power3';
+const ease = 'power3';
 
 const groupRef = ref<SVGGElement | null>(null);
 const circleRef = ref<SVGCircleElement | null>(null);
@@ -22,18 +22,18 @@ let yTo: gsap.QuickToFunc | undefined;
 let rTo: gsap.QuickToFunc | undefined;
 
 onMounted(() => {
-  xTo = gsap.quickTo(groupRef.value, 'x', { duration: duration, ease: easing });
-  yTo = gsap.quickTo(groupRef.value, 'y', { duration: duration, ease: easing });
-  rTo = gsap.quickTo(circleRef.value, 'r', { duration: duration, ease: easing });
+  xTo = gsap.quickTo(groupRef.value, 'x', { duration, ease });
+  yTo = gsap.quickTo(groupRef.value, 'y', { duration, ease });
+  rTo = gsap.quickTo(circleRef.value, 'r', { duration, ease });
 
   gsap.fromTo(
     groupRef.value,
     { scale: 0, transformOrigin: '50% 50%' },
-    { scale: 1, transformOrigin: '50% 50%', duration: duration, ease: easing },
+    { scale: 1, transformOrigin: '50% 50%', duration, ease },
   );
 });
 
-watch(props, (_) => {
+onUpdated(() => {
   if (rTo) {
     xTo!(circle.value.x - copy.x);
     yTo!(circle.value.y - copy.y);
@@ -42,7 +42,7 @@ watch(props, (_) => {
 });
 
 onBeforeUnmount(() => {
-  gsap.to(groupRef.value, { scale: 0, transformOrigin: '50% 50%', duration: duration, ease: easing });
+  gsap.to(groupRef.value, { scale: 0, transformOrigin: '50% 50%', duration, ease });
 });
 </script>
 
@@ -76,6 +76,8 @@ onBeforeUnmount(() => {
       >
         {{ circle.caption }}
       </text>
+
+      <text class="for-updating">{{ `${circle.x}${circle.y}${circle.radius}` }}</text>
     </g>
   </g>
 </template>
@@ -83,6 +85,10 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .js-scale-group circle,
 .js-scale-group text {
-  transition: fill var(--circle-dur) var(--power3-in), stroke var(--circle-dur) var(--power3-in);
+  transition: fill calc(var(--circle-dur) * 0.5) ease-in, stroke calc(var(--circle-dur) * 0.5) ease-in;
+}
+
+.for-updating {
+  display: none;
 }
 </style>

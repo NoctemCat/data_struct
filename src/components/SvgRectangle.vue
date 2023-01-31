@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, ref, toRaw, toRef, toRefs, watch } from 'vue';
+import { onBeforeUnmount, onMounted, onUpdated, ref, toRaw, toRef, toRefs, watch } from 'vue';
 import gsap from 'gsap';
 import type { Rectangle } from '@/utility/classes';
 import { ScreenInfoKey } from '@/utility/symbols';
@@ -12,7 +12,7 @@ const rectangle = toRef(props, 'rectangle');
 const copy: Rectangle = structuredClone(toRaw(rectangle.value));
 
 const duration = 1;
-const easing = 'power3';
+const ease = 'power3';
 
 const adjusted = () => {
   return { x: copy.x - copy.width / 2, y: copy.y - copy.height / 2 };
@@ -27,20 +27,20 @@ let widthTo: gsap.QuickToFunc | undefined;
 let heigthTo: gsap.QuickToFunc | undefined;
 
 onMounted(() => {
-  xTo = gsap.quickTo(groupRef.value, 'x', { duration: duration, ease: easing });
-  yTo = gsap.quickTo(groupRef.value, 'y', { duration: duration, ease: easing });
+  xTo = gsap.quickTo(groupRef.value, 'x', { duration, ease });
+  yTo = gsap.quickTo(groupRef.value, 'y', { duration, ease });
 
-  widthTo = gsap.quickTo(rectRef.value, 'width', { duration: duration, ease: easing });
-  heigthTo = gsap.quickTo(rectRef.value, 'height', { duration: duration, ease: easing });
+  widthTo = gsap.quickTo(rectRef.value, 'width', { duration, ease });
+  heigthTo = gsap.quickTo(rectRef.value, 'height', { duration, ease });
 
   gsap.fromTo(
     groupRef.value,
     { scale: 0, transformOrigin: '50% 50%' },
-    { scale: 1, transformOrigin: '50% 50%', duration: duration, ease: easing },
+    { scale: 1, transformOrigin: '50% 50%', duration, ease },
   );
 });
 
-watch(props, (_) => {
+onUpdated(() => {
   if (widthTo) {
     xTo!(rectangle.value.x - copy.x);
     yTo!(rectangle.value.y - copy.y);
@@ -50,7 +50,7 @@ watch(props, (_) => {
 });
 
 onBeforeUnmount(() => {
-  gsap.to(groupRef.value, { scale: 0, transformOrigin: '50% 50%', duration: duration, ease: easing });
+  gsap.to(groupRef.value, { scale: 0, transformOrigin: '50% 50%', duration, ease });
 });
 </script>
 
@@ -87,6 +87,7 @@ onBeforeUnmount(() => {
       >
         {{ rectangle.caption }}
       </text>
+      <text class="for-updating">{{ `${rectangle.x}${rectangle.y}${rectangle.width}${rectangle.height}` }}</text>
     </g>
   </g>
 </template>
@@ -94,7 +95,11 @@ onBeforeUnmount(() => {
 <style lang="scss" scoped>
 .js-scale-group rect,
 .js-scale-group text {
-  transition: fill var(--circle-dur) var(--power3-in), stroke var(--circle-dur) var(--power3-in),
+  transition: fill calc(var(--circle-dur) * 0.5) ease-in, stroke calc(var(--circle-dur) * 0.5) ease-in,
     bx var(--circle-dur) var(--power3-in), by var(--circle-dur) var(--power3-in);
+}
+
+.for-updating {
+  display: none;
 }
 </style>

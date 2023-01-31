@@ -61,7 +61,7 @@ onBeforeUnmount(() => {
   }
 });
 
-watch(props, (_) => {
+watch(props.edge, (_) => {
   const { firstDot: first, secondDot: second } = calculateDPath(edge.value.a, edge.value.b);
 
   const newEndForwPath = `M${second.x},${second.y}L${first.x},${first.y}`;
@@ -82,7 +82,7 @@ watch(props, (_) => {
     });
   }
 
-  gsap.fromTo(edgeColor, edgeColor, { color: edge.value.color, duration: duration });
+  gsap.to(edgeColor, { color: edge.value.color, duration: duration });
 });
 </script>
 

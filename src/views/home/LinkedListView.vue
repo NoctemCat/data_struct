@@ -4,7 +4,7 @@ import IconClose from '@/components/icons/IconClose.vue';
 
 import { useLListStore } from '@/stores/linkedlist';
 import type { Circle, Rectangle } from '@/utility/classes';
-import { getRandomItemArray, injectStrict } from '@/utility/functions';
+import { getRandomItemArray, injectStrict, triggerWithEase } from '@/utility/functions';
 import { ScreenInfoKey } from '@/utility/symbols';
 import type { Point, ValidObjects } from '@/utility/types';
 import { useThrottleFn, useIntervalFn, useMouse } from '@vueuse/core';
@@ -62,7 +62,7 @@ const switchEdge = () => {
   const edge = getRandomItemArray(edges.value);
   const newb = Math.random() > 0.5 ? getRandomItemArray(circles.value) : getRandomItemArray(rects.value);
   if (edge?.b) {
-    if (edge.b !== newb) {
+    if (edge.a !== newb) {
       edgeFuncs.update(edge, {
         b: newb,
       });
@@ -95,6 +95,7 @@ const createEdge = (a: Point, b: Point) => {
 
   edgeFuncs.add(edge);
 };
+const colors = ['#333', 'red', 'blue', 'green', '#636363'];
 
 const addRandomHead = (caption: string) => {
   const newCircleVal = Math.floor(Math.random() * 101).toString();
@@ -109,6 +110,8 @@ const addRandomHead = (caption: string) => {
     text: newCircleVal,
     caption: caption,
     radius: newRad,
+    textColor: getRandomItemArray(colors),
+    captionColor: getRandomItemArray(colors),
   };
 
   const newCircle = circleFuncs.add(circle);
@@ -147,7 +150,7 @@ const creatRandomList = () => {
       if (i === 0) {
         prevCircle = addRandomHead('head');
       }
-      const caption = i === max - 1 ? 'tail' : '';
+      const caption = i === max - 1 ? 'tail' : 'body';
       const curCircle = Math.random() > 0.5 ? addRandomHead(caption) : addRandomRect(caption);
       createEdge(prevCircle!, curCircle);
       prevCircle = curCircle;
@@ -182,45 +185,21 @@ const deleteLast = () => {
     if (lastEdge.b!.objType === 'Circle') circleFuncs.removeLast();
     else rectsFuncs.removeLast();
   } else {
-    edgeFuncs.removeLast();
-    circleFuncs.removeLast();
-    rectsFuncs.removeLast();
-  }
-};
-
-function delay(time: number) {
-  return new Promise((resolve) => setTimeout(resolve, time));
-}
-
-const deleteRecursively = async (done: () => void) => {
-  if (edges.value.length > 0) {
-    const lastEdge = edgeFuncs.getByIndex(edges.value.length - 1)!;
-    edgeFuncs.removeLast();
-
-    if (lastEdge.b && lastEdge.b.objType === 'Circle') circleFuncs.removeLast();
-    else if (lastEdge.b) rectsFuncs.removeLast();
-
-    await delay(100);
-    deleteRecursively(done);
-  } else {
     if (circles.value.length > 0) {
       circleFuncs.removeLast();
-      await delay(100);
-      deleteRecursively(done);
     } else if (rects.value.length > 0) {
       rectsFuncs.removeLast();
-      await delay(100);
-      deleteRecursively(done);
-    } else {
-      done();
     }
   }
 };
 
-let currentlyResetting = false;
 const reset = async (done: () => void) => {
-  if (currentlyResetting) return true;
-  await deleteRecursively(done);
+  triggerWithEase.inQuad(
+    100 * (circles.value.length + rects.value.length),
+    circles.value.length + rects.value.length,
+    deleteLast,
+    done,
+  );
 };
 const resetThr = useThrottleFn(reset, 400);
 
@@ -593,7 +572,7 @@ const printHistory = () => {
 .hidden {
   :deep(svg) {
     path {
-      animation: hide 1s var(--power3-in) forwards;
+      animation: hide 1s var(--power3-out) forwards;
     }
 
     @keyframes hide {
@@ -610,7 +589,7 @@ const printHistory = () => {
 .shown {
   :deep(svg) {
     path {
-      animation: show 1s var(--power3-out) forwards;
+      animation: show 1s var(--power3-in) forwards;
     }
 
     @keyframes show {
