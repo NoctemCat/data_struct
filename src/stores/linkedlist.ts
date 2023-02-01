@@ -1,223 +1,103 @@
-import { computed, ref, toRef } from 'vue';
+import { computed, ref, toRef, watch, type Ref } from 'vue';
 import { defineStore } from 'pinia';
 import { useRefHistory } from '@vueuse/core';
 import { Circle, Edge, Rectangle } from '@/utility/classes';
+import type { ValidObjects } from '@/utility/types';
+import { isOutOfBounds } from '@/utility/functions';
 
-type ValueOf<T> = T[keyof T];
-type PossibleVars<T> = {
-  [key in keyof T]?: ValueOf<T>;
-};
-type TypeVars<T> = Omit<
-  {
-    [key in keyof T]: T[keyof T];
-  },
-  'id'
->;
-
-//type IntersType = Circle & Rectangle & Edge;
-type UnionType = Circle | Rectangle | Edge;
-
-const setValue = <T extends UnionType, K extends keyof T, V extends T[K]>(obj: T, prop: K, value: V) => {
+const setValue = <T extends Circle | Rectangle | Edge, K extends keyof T, V extends T[K]>(
+  obj: T,
+  prop: K,
+  value: V,
+) => {
   obj[prop] = value;
 };
 
-const getByIndexGen = <T extends UnionType>(index: number, holder: { elems: T[]; maxId: number }) => {
-  if (index >= 0 && index < holder.elems.length) {
-    return holder.elems[index];
+//type LListStoreType = {
+//  circleHolder: { elems: Circle[]; maxId: number };
+//  rectHolder: { elems: Rectangle[]; maxId: number };
+//  edgeHolder: { elems: Edge[]; maxId: number };
+//};
+//type LinkedLStoreRawType = {
+//  circleHolder: { elems: Circle[]; maxId: number };
+//  rectHolder: { elems: Rectangle[]; maxId: number };
+//  edgeHolder: { elems: (Edge & { a?: string; b?: string })[]; maxId: number };
+//};
+
+const ctors: { [key in ValidObjects]: new (...args: any[]) => any } = {
+  Circle: Circle,
+  Rectangle: Rectangle,
+  Edge: Edge,
+};
+
+class Creator<T> {
+  constructor(private ctor: new (...args: any[]) => T) {}
+  create(...args: any[]) {
+    return new this.ctor(args[0]);
   }
-};
+}
 
-const addGen = <T extends UnionType>(elIn: TypeVars<T>, holder: { elems: T[]; maxId: number }): T => {
-  switch (elIn.objType) {
-    case 'Circle':
-      holder.elems.push(
-        new Circle({
-          ...elIn,
-          id: `${elIn.objType}${holder.maxId}`,
-        } as unknown as Circle) as T,
-      );
-      break;
-    case 'Rectangle':
-      holder.elems.push(
-        new Rectangle({
-          ...elIn,
-          id: `${elIn.objType}${holder.maxId}`,
-        } as unknown as Rectangle) as T,
-      );
-      break;
-    case 'Edge':
-      holder.elems.push(
-        new Edge({
-          ...elIn,
-          id: `${elIn.objType}${holder.maxId}`,
-        } as Edge) as T,
-      );
-      break;
-  }
-  holder.maxId++;
-  return holder.elems[holder.elems.length - 1];
-};
+const prepareSetters = <T extends Circle | Rectangle | Edge>(array: Ref<T[]>, maxId: Ref<number>) => {
+  const add = (elIn: Omit<T, 'id'>) => {
+    const creator = new Creator(ctors[elIn.objType]);
+    array.value.push(creator.create({ ...elIn, id: maxId.value++ }));
 
-const addManyGen = <T extends UnionType>(elsIn: TypeVars<T>[], holder: { elems: T[]; maxId: number }) => {
-  const added: typeof elsIn = [];
-  elsIn.forEach((el) => {
-    added.push(addGen(el, holder));
-  });
-  return added;
-};
+    return array.value[array.value.length - 1];
+  };
 
-const updateByIndexGen = <T extends UnionType>(
-  index: number,
-  vars: PossibleVars<T>,
-  holder: { elems: T[]; maxId: number },
-) => {
-  if (index < 0 || index >= holder.elems.length) {
-    return;
-  }
-  for (const [k, v] of Object.entries(vars) as Array<[keyof T, ValueOf<T>]>) {
-    setValue(holder.elems[index], k, v);
-  }
-};
+  const addMany = (elsIn: Omit<T, 'id'>[]) => elsIn.forEach(add);
 
-const updateGen = <T extends UnionType>(el: T, vars: PossibleVars<T>, holder: { elems: T[]; maxId: number }) => {
-  const index = holder.elems.findIndex((x) => x.id === el.id);
+  const updateByIndex = (index: number, vars: Partial<T>) => {
+    if (isOutOfBounds(index, array.value)) return;
 
-  if (index > -1) {
-    updateByIndexGen(index, vars, holder);
-  }
-};
+    for (const [k, v] of Object.entries(vars) as Array<[keyof T, T[keyof T]]>) {
+      setValue(array.value[index], k, v);
+    }
+  };
 
-const removeIndexGen = <T extends UnionType>(index: number, holder: { elems: T[]; maxId: number }) => {
-  if (index >= 0 && index < holder.elems.length) {
-    holder.elems.splice(index, 1);
-  }
-};
+  const update = (el: T, vars: Partial<T>) =>
+    updateByIndex(
+      array.value.findIndex((x) => x.id === el.id),
+      vars,
+    );
 
-const removeLastGen = <T extends UnionType>(holder: { elems: T[]; maxId: number }) => {
-  if (holder.elems.length > 0) {
-    holder.elems.pop();
-  }
-};
+  const removeIndex = (index: number) => {
+    if (!isOutOfBounds(index, array.value)) {
+      array.value.splice(index, 1);
+    }
+  };
 
-const resetGen = <T extends UnionType>(holder: { elems: T[]; maxId: number }) => {
-  holder.elems = [];
-};
+  const removeLast = () => array.value.pop();
+  const reset = () => (array.value = []);
 
-type LListStoreType = {
-  circleHolder: { elems: Circle[]; maxId: number };
-  rectHolder: { elems: Rectangle[]; maxId: number };
-  edgeHolder: { elems: Edge[]; maxId: number };
-};
-type LinkedLStoreRawType = {
-  circleHolder: { elems: Circle[]; maxId: number };
-  rectHolder: { elems: Rectangle[]; maxId: number };
-  edgeHolder: { elems: (Edge & { a?: string; b?: string })[]; maxId: number };
+  return {
+    add,
+    addMany,
+    updateByIndex,
+    update,
+    removeIndex,
+    removeLast,
+    reset,
+  };
 };
 
 export const useLListStore = defineStore('linkedlist', () => {
-  const storeState = ref<LListStoreType>({
-    circleHolder: { elems: [] as Circle[], maxId: 0 },
-    rectHolder: { elems: [] as Rectangle[], maxId: 0 },
-    edgeHolder: { elems: [] as Edge[], maxId: 0 },
-  });
+  const circles = ref<Circle[]>([]);
+  const rects = ref<Rectangle[]>([]);
+  const edges = ref<Edge[]>([]);
 
-  const dumpHistory = (state: LListStoreType) => {
-    const preparedEdges = state.edgeHolder.elems.map((el) => {
-      return { ...el, a: el.a?.id, b: el.b?.id };
-    });
-    return JSON.stringify({ ...state, edgeHolder: { elems: preparedEdges, maxId: state.edgeHolder.maxId } });
-  };
-
-  const parseHistory = (raw: string) => {
-    const rawParsed = JSON.parse(raw) as LinkedLStoreRawType;
-
-    const mappedCircles = new Map<string, Circle>();
-    rawParsed.circleHolder.elems.forEach((el) => mappedCircles.set(el.id, el));
-
-    const mappedRects = new Map<string, Rectangle>();
-    rawParsed.rectHolder.elems.forEach((el) => mappedRects.set(el.id, el));
-
-    const parsedEdges = rawParsed.edgeHolder.elems.map((el) => {
-      const connectedElA = mappedCircles.get(el.a ?? '') ?? mappedRects.get(el.a ?? '');
-      const connectedElB = mappedCircles.get(el.b ?? '') ?? mappedRects.get(el.b ?? '');
-
-      return { ...el, a: connectedElA, b: connectedElB };
-    });
-
-    console.log('parse history', {
-      ...rawParsed,
-      edgeHolder: { elems: parsedEdges, maxId: rawParsed.edgeHolder.maxId },
-    });
-    return { ...rawParsed, edgeHolder: { elems: parsedEdges, maxId: rawParsed.edgeHolder.maxId } };
-  };
-
-  const { history, commit, undo, redo } = useRefHistory(storeState, {
-    deep: true,
-    capacity: 100,
-    dump: dumpHistory,
-    parse: parseHistory,
-  });
-
-  const circleFuncs = {
-    getByIndex: (index: number) => getByIndexGen(index, storeState.value.circleHolder),
-    add: (circleIn: TypeVars<Circle>) => addGen(circleIn, storeState.value.circleHolder),
-    addMany: (circlesIn: TypeVars<Circle>[]) => addManyGen(circlesIn, storeState.value.circleHolder),
-    update: (el: Circle, vars: PossibleVars<Circle>) => updateGen(el, vars, storeState.value.circleHolder),
-    updateByIndex: (index: number, vars: PossibleVars<Circle>) =>
-      updateByIndexGen(index, vars, storeState.value.circleHolder),
-    removeIndex: (index: number) => removeIndexGen(index, storeState.value.circleHolder),
-    removeLast: () => removeLastGen(storeState.value.circleHolder),
-    reset: () => resetGen(storeState.value.circleHolder),
-  };
-
-  const rectsFuncs = {
-    getByIndex: (index: number) => getByIndexGen(index, storeState.value.rectHolder),
-    add: (circleIn: TypeVars<Rectangle>) => addGen(circleIn, storeState.value.rectHolder),
-    addMany: (circlesIn: TypeVars<Rectangle>[]) => addManyGen(circlesIn, storeState.value.rectHolder),
-    update: (el: Rectangle, vars: PossibleVars<Rectangle>) => updateGen(el, vars, storeState.value.rectHolder),
-    updateByIndex: (index: number, vars: PossibleVars<Rectangle>) =>
-      updateByIndexGen(index, vars, storeState.value.rectHolder),
-    removeIndex: (index: number) => removeIndexGen(index, storeState.value.rectHolder),
-    removeLast: () => removeLastGen(storeState.value.rectHolder),
-    reset: () => resetGen(storeState.value.rectHolder),
-  };
-
-  const edgeFuncs = {
-    getByIndex: (index: number) => getByIndexGen(index, storeState.value.edgeHolder),
-    add: (circleIn: TypeVars<Edge>) => addGen(circleIn, storeState.value.edgeHolder),
-    addMany: (circlesIn: TypeVars<Edge>[]) => addManyGen(circlesIn, storeState.value.edgeHolder),
-    update: (el: Edge, vars: PossibleVars<Edge>) => updateGen(el, vars, storeState.value.edgeHolder),
-    updateByIndex: (index: number, vars: PossibleVars<Edge>) =>
-      updateByIndexGen(index, vars, storeState.value.edgeHolder),
-    removeIndex: (index: number) => removeIndexGen(index, storeState.value.edgeHolder),
-    removeLast: () => removeLastGen(storeState.value.edgeHolder),
-    reset: () => resetGen(storeState.value.edgeHolder),
-  };
-
-  const t = toRef(storeState, 'value');
-  //const { circleHolder, edgeHolder, rectHolder } = t(storeState);
+  const circleMaxId = ref<number>(0);
+  const rectMaxId = ref<number>(0);
+  const edgeMaxId = ref<number>(0);
 
   const printState = () => {
-    console.log(storeState.value);
+    //console.log(storeState.value);
   };
-  const circles = computed(() => {
-    return storeState.value.circleHolder.elems;
-  });
-  const rects = computed(() => {
-    return storeState.value.rectHolder.elems;
-  });
-  const edges = computed(() => {
-    return storeState.value.edgeHolder.elems;
-  });
 
   return {
-    circleFuncs,
-    rectsFuncs,
-    edgeFuncs,
-    history,
-    state: storeState,
-    undo,
-    redo,
+    circleFuncs: prepareSetters(circles, circleMaxId),
+    rectsFuncs: prepareSetters(rects, rectMaxId),
+    edgeFuncs: prepareSetters(edges, edgeMaxId),
     printState,
     circles,
     rects,

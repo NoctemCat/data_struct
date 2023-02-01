@@ -11,22 +11,24 @@ import { useThrottleFn, useIntervalFn, useMouse } from '@vueuse/core';
 import { storeToRefs } from 'pinia';
 import gsap from 'gsap';
 import { onMounted, ref, toRefs, watch } from 'vue';
+import { usePiniaHistory } from '@/stores/history';
 //import { useI18n } from 'vue-i18n';
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 
-const { circles, rects, edges, history } = storeToRefs(useLListStore());
+const { circles, rects, edges } = storeToRefs(useLListStore());
 
 //const circles = toRef(circleHolder.value, 'elems');
 //const rects = toRef(rectHolder.value, 'elems');
 //const edges = toRef(edgeHolder.value, 'elems');
 
-const { circleFuncs, rectsFuncs, edgeFuncs, undo, redo, printState } = useLListStore();
+// undo, redo
+const { circleFuncs, rectsFuncs, edgeFuncs, printState } = useLListStore();
 
 //const { t } = useI18n({ useScope: 'local' });
 
 //let xCur = 4 * rem.value;
-
+usePiniaHistory();
 const { x: xMouse, y: yMouse } = useMouse();
 
 const getRandomPos = () => {
@@ -161,7 +163,7 @@ const creatRandomListThr = useThrottleFn(creatRandomList, 400);
 
 const addRandom = () => {
   if (edges.value.length > 0) {
-    const last = edgeFuncs.getByIndex(edges.value.length - 1)!;
+    const last = edges.value[edges.value.length - 1];
     const prevEl = last.b;
 
     prevEl!.caption = '';
@@ -177,7 +179,7 @@ const deleteLast = () => {
   //circleFuncs.removeLast();
   if (edges.value.length > 0) {
     //xCur -= 64;
-    const lastEdge = edgeFuncs.getByIndex(edges.value.length - 1)!;
+    const lastEdge = edges.value[edges.value.length - 1];
 
     lastEdge.a!.caption = 'tail';
     edgeFuncs.removeLast();
@@ -194,12 +196,9 @@ const deleteLast = () => {
 };
 
 const reset = async (done: () => void) => {
-  triggerWithEase.inQuad(
-    100 * (circles.value.length + rects.value.length),
-    circles.value.length + rects.value.length,
-    deleteLast,
-    done,
-  );
+  //deleteLast
+
+  triggerWithEase.inQuad(5000, circles.value.length + edges.value.length, deleteLast, done);
 };
 const resetThr = useThrottleFn(reset, 400);
 
@@ -317,7 +316,7 @@ const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
 };
 
 const printHistory = () => {
-  console.log(history.value);
+  //console.log(history.value);
 };
 </script>
 
@@ -425,8 +424,8 @@ const printHistory = () => {
         <button @click="resume()">start</button>
         <button @click="pause()">stop</button>
 
-        <button @click="undo()">undo</button>
-        <button @click="redo()">redo</button>
+        <!--<button @click="undo()">undo</button>
+        <button @click="redo()">redo</button>-->
         <button @click="printState()">print state</button>
         <button @click="printHistory()">print history</button>
       </div>

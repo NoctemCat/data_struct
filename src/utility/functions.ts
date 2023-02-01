@@ -105,6 +105,23 @@ const triggerWithEase = {
     triggerWithEaseFunc(duration, times, easeType.linear, callback, done),
 };
 
+function once<T>(fn: (...args: any) => T, ...args: any) {
+  let result: T;
+  let executed = false;
+  return () => {
+    if (!executed) {
+      console.log('execute');
+      result = fn(...args);
+      executed = true;
+    }
+    return result;
+  };
+}
+
+const isOutOfBounds = (index: number, arr: any[]) => {
+  return index < 0 || index >= arr.length;
+};
+
 //const _ =
 export {
   deepClone,
@@ -118,4 +135,6 @@ export {
   isValidObject,
   delay,
   triggerWithEase,
+  once,
+  isOutOfBounds,
 };

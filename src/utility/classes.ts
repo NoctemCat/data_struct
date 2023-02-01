@@ -1,11 +1,12 @@
+import type { Expand } from './merge';
 import type { Point, ValidObjects } from './types';
 
 class Circle {
   objType: ValidObjects = 'Circle';
   id: string;
-  x: number;
-  y: number;
-  radius: number;
+  x!: number;
+  y!: number;
+  radius!: number;
   text? = '';
   caption? = '';
   borderColor? = 'var(--circle-border)';
@@ -13,28 +14,27 @@ class Circle {
   textColor? = 'var(--circle-text-border)';
   captionColor? = 'var(--circle-caption-border)';
 
-  constructor(vars: Circle) {
-    this.id = vars.id;
-    this.x = vars.x;
-    this.y = vars.y;
-    this.radius = vars.radius;
+  constructor(vars: Omit<Partial<Circle>, 'id'> & { id: string | number; x: number; y: number; radius: number }) {
+    this.objType = 'Circle' as ValidObjects;
 
-    this.text = vars.text ?? this.text;
-    this.caption = vars.caption ?? this.caption;
-    this.borderColor = vars.borderColor ?? this.borderColor;
-    this.fillColor = vars.fillColor ?? this.fillColor;
-    this.textColor = vars.textColor ?? this.textColor;
-    this.captionColor = vars.captionColor ?? this.captionColor;
+    vars['objType'] = undefined;
+    const { id, objType: _, ...rest } = vars;
+    if (typeof id === 'number') {
+      this.id = `${this.objType}${id}`;
+    } else {
+      this.id = id;
+    }
+    Object.assign(this, rest);
   }
 }
 
 class Rectangle {
   objType: ValidObjects = 'Rectangle';
   id: string;
-  x: number;
-  y: number;
-  width: number;
-  height: number;
+  x!: number;
+  y!: number;
+  width!: number;
+  height!: number;
   borderRadius? = '0';
   text? = '';
   caption? = '';
@@ -43,20 +43,25 @@ class Rectangle {
   textColor? = 'var(--rectangle-text-border)';
   captionColor? = 'var(--rectangle-caption-border)';
 
-  constructor(vars: Rectangle) {
-    this.id = vars.id;
-    this.x = vars.x;
-    this.y = vars.y;
-    this.width = vars.width;
-    this.height = vars.height;
+  constructor(
+    vars: Omit<Partial<Rectangle>, 'id'> & {
+      id: string | number;
+      x: number;
+      y: number;
+      width: number;
+      height: number;
+    },
+  ) {
+    this.objType = 'Rectangle' as ValidObjects;
 
-    this.borderRadius = vars.borderRadius ?? this.borderRadius;
-    this.text = vars.text ?? this.text;
-    this.caption = vars.caption ?? this.caption;
-    this.borderColor = vars.borderColor ?? this.borderColor;
-    this.fillColor = vars.fillColor ?? this.fillColor;
-    this.textColor = vars.textColor ?? this.textColor;
-    this.captionColor = vars.captionColor ?? this.captionColor;
+    vars['objType'] = undefined;
+    const { id, ...rest } = vars;
+    if (typeof id === 'number') {
+      this.id = `${this.objType}${id}`;
+    } else {
+      this.id = id;
+    }
+    Object.assign(this, rest);
   }
 }
 
@@ -69,14 +74,17 @@ class Edge {
   backward? = false;
   color? = 'var(--edge-color)';
 
-  constructor(vars: Edge) {
-    this.id = vars.id;
-    this.a = vars.a;
-    this.b = vars.b;
+  constructor(vars: Omit<Partial<Edge>, 'id'> & { id: string | number; a: Point; b: Point }) {
+    this.objType = 'Edge' as ValidObjects;
 
-    this.forward = vars.forward ?? this.forward;
-    this.backward = vars.backward ?? this.backward;
-    this.color = vars.color ?? this.color;
+    vars['objType'] = undefined;
+    const { id, ...rest } = vars;
+    if (typeof id === 'number') {
+      this.id = `${this.objType}${id}`;
+    } else {
+      this.id = id;
+    }
+    Object.assign(this, rest);
   }
 }
 
