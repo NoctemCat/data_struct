@@ -2,7 +2,7 @@
 import SvgCanvas from '@/components/SvgCanvas.vue';
 import IconClose from '@/components/icons/IconClose.vue';
 
-import { useLListStore } from '@/stores/linkedlist';
+import { useShapesStore } from '@/stores/linkedlist';
 import type { Circle, Rectangle } from '@/utility/classes';
 import { getRandomItemArray, injectStrict, triggerWithEase } from '@/utility/functions';
 import { ScreenInfoKey } from '@/utility/symbols';
@@ -16,19 +16,19 @@ import { usePiniaHistory } from '@/stores/history';
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 
-const { circles, rects, edges } = storeToRefs(useLListStore());
+const { circles, rects, edges } = storeToRefs(useShapesStore());
 
 //const circles = toRef(circleHolder.value, 'elems');
 //const rects = toRef(rectHolder.value, 'elems');
 //const edges = toRef(edgeHolder.value, 'elems');
 
 // undo, redo
-const { circleFuncs, rectsFuncs, edgeFuncs, printState } = useLListStore();
+const { circleFuncs, rectsFuncs, edgeFuncs, printState } = useShapesStore();
 
 //const { t } = useI18n({ useScope: 'local' });
 
 //let xCur = 4 * rem.value;
-usePiniaHistory();
+const { undo, redo } = usePiniaHistory();
 const { x: xMouse, y: yMouse } = useMouse();
 
 const getRandomPos = () => {
@@ -424,8 +424,8 @@ const printHistory = () => {
         <button @click="resume()">start</button>
         <button @click="pause()">stop</button>
 
-        <!--<button @click="undo()">undo</button>
-        <button @click="redo()">redo</button>-->
+        <button @click="undo()">undo</button>
+        <button @click="redo()">redo</button>
         <button @click="printState()">print state</button>
         <button @click="printHistory()">print history</button>
       </div>

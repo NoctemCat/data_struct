@@ -4,6 +4,7 @@ import { useRefHistory } from '@vueuse/core';
 import { Circle, Edge, Rectangle } from '@/utility/classes';
 import type { ValidObjects } from '@/utility/types';
 import { isOutOfBounds } from '@/utility/functions';
+import type { Expand, OptionalKeys, RequiredKeys } from '@/utility/merge';
 
 const setValue = <T extends Circle | Rectangle | Edge, K extends keyof T, V extends T[K]>(
   obj: T,
@@ -38,7 +39,7 @@ class Creator<T> {
 }
 
 const prepareSetters = <T extends Circle | Rectangle | Edge>(array: Ref<T[]>, maxId: Ref<number>) => {
-  const add = (elIn: Omit<T, 'id'>) => {
+  const add = (elIn: Omit<T, 'id'>): T => {
     const creator = new Creator(ctors[elIn.objType]);
     array.value.push(creator.create({ ...elIn, id: maxId.value++ }));
 
@@ -81,7 +82,7 @@ const prepareSetters = <T extends Circle | Rectangle | Edge>(array: Ref<T[]>, ma
   };
 };
 
-export const useLListStore = defineStore('linkedlist', () => {
+export const useShapesStore = defineStore('shapes', () => {
   const circles = ref<Circle[]>([]);
   const rects = ref<Rectangle[]>([]);
   const edges = ref<Edge[]>([]);
@@ -94,6 +95,12 @@ export const useLListStore = defineStore('linkedlist', () => {
     //console.log(storeState.value);
   };
 
+  //this.$state;
+  //const init = (state) => {
+  //  //this.;
+  //  console.log(state);
+  //};
+
   return {
     circleFuncs: prepareSetters(circles, circleMaxId),
     rectsFuncs: prepareSetters(rects, rectMaxId),
@@ -102,5 +109,10 @@ export const useLListStore = defineStore('linkedlist', () => {
     circles,
     rects,
     edges,
+    circleMaxId,
+    rectMaxId,
+    edgeMaxId,
   };
 });
+
+//console.log(useShapesStore().$state);

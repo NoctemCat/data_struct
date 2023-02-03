@@ -17,7 +17,6 @@ class Circle {
   constructor(vars: Omit<Partial<Circle>, 'id'> & { id: string | number; x: number; y: number; radius: number }) {
     this.objType = 'Circle' as ValidObjects;
 
-    vars['objType'] = undefined;
     const { id, objType: _, ...rest } = vars;
     if (typeof id === 'number') {
       this.id = `${this.objType}${id}`;
@@ -54,8 +53,7 @@ class Rectangle {
   ) {
     this.objType = 'Rectangle' as ValidObjects;
 
-    vars['objType'] = undefined;
-    const { id, ...rest } = vars;
+    const { id, objType: _, ...rest } = vars;
     if (typeof id === 'number') {
       this.id = `${this.objType}${id}`;
     } else {
@@ -77,8 +75,7 @@ class Edge {
   constructor(vars: Omit<Partial<Edge>, 'id'> & { id: string | number; a: Point; b: Point }) {
     this.objType = 'Edge' as ValidObjects;
 
-    vars['objType'] = undefined;
-    const { id, ...rest } = vars;
+    const { id, objType: _, ...rest } = vars;
     if (typeof id === 'number') {
       this.id = `${this.objType}${id}`;
     } else {

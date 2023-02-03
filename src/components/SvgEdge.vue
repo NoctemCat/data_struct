@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, reactive, toRaw, toRef, watch } from 'vue';
+import { onBeforeUnmount, onMounted, onUpdated, reactive, toRaw, toRef, watch } from 'vue';
 import gsap from 'gsap';
 import type { Circle, Edge, Rectangle } from '@/utility/classes';
 import type { Point } from '@/utility/types';
@@ -61,7 +61,7 @@ onBeforeUnmount(() => {
   }
 });
 
-watch(props.edge, (_) => {
+watch(props, (_) => {
   const { firstDot: first, secondDot: second } = calculateDPath(edge.value.a, edge.value.b);
 
   const newEndForwPath = `M${second.x},${second.y}L${first.x},${first.y}`;
