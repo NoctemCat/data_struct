@@ -10,76 +10,6 @@ import { isFunction, timestamp } from '@vueuse/shared';
 import type { Store, _StoreWithState } from 'pinia';
 import { computed, markRaw, ref, watch, type Raw, type Ref } from 'vue';
 
-//const mapHistory = new Map<string, _StoreWithState<string, {}, {}, {}>['$state'][]>();
-//const mapRedo = new Map<string, _StoreWithState<string, {}, {}, {}>['$state'][]>();
-
-//let trackChanges = true;
-
-//export const useStoreHistory = <S extends Store>(
-//  store: S,
-//  dump?: (state: S['$state']) => string,
-//  parse?: (raw: string) => S['$state'],
-//) => {
-//  if (!mapHistory.has(store.$id)) {
-//    mapHistory.set(store.$id, [JSON.parse(JSON.stringify(store.$state))]);
-//    mapRedo.set(store.$id, []);
-
-//    const historyWatch: S['$state'][] = mapHistory.get(store.$id)!;
-
-//    watch(
-//      store.$state,
-//      (_) => {
-//        if (trackChanges) {
-//          const dumped = dump ? dump(store.$state) : JSON.stringify(store.$state);
-//          const parsed = parse ? parse(dumped) : JSON.parse(dumped);
-//          historyWatch.push(parsed);
-//        }
-//      },
-//      { deep: true },
-//    );
-//  }
-
-//  const history: S['$state'][] = mapHistory.get(store.$id)!;
-//  const redoStack: S['$state'][] = mapRedo.get(store.$id)!;
-
-//  const undo = () => {
-//    trackChanges = false;
-//    const last = history[history.length - 2];
-//    if (!last) {
-//      trackChanges = true;
-//      return;
-//    }
-//    console.log(history);
-
-//    store.$patch({ ...last });
-//    setTimeout(() => {
-//      trackChanges = true;
-//    }, 0);
-
-//    if (history.length > 1) {
-//      redoStack.push(history.pop()!);
-//    }
-//  };
-
-//  const redo = () => {
-//    trackChanges = false;
-//    const last = redoStack.pop();
-//    if (!last) {
-//      trackChanges = true;
-//      return;
-//    }
-
-//    store.$patch({ ...last });
-//    setTimeout(() => {
-//      trackChanges = true;
-//    }, 0);
-
-//    history.push(last);
-//  };
-
-//  return { undo, redo };
-//};
-
 const fnBypass = <F, T>(v: F) => v as unknown as T;
 const fnSetSource = <F>(source: Ref<F>, value: F) => (source.value = value);
 const fnPatchStore = <S extends Store, Raw extends S['$state']>(store: S, value: Raw) => store.$patch({ ...value });
@@ -96,7 +26,7 @@ function defaultParse<R, S>(clone?: boolean | CloneFn<R>) {
 
 export function useStoreManualHistory<S extends Store, Raw extends S['$state'], Serialized = Raw>(
   store: S,
-  options: Omit<UseManualRefHistoryOptions<Raw, Serialized>, 'fnSetSource'> & {
+  options: Omit<UseManualRefHistoryOptions<Raw, Serialized>, 'setSource'> & {
     patchStore?: (store: S, value: Raw) => void;
   } = {},
 ): Omit<UseManualRefHistoryReturn<Raw, Serialized>, 'source'> & { store: S } {

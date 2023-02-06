@@ -6,24 +6,9 @@ import type { ValidObjects } from '@/utility/types';
 import { isOutOfBounds } from '@/utility/functions';
 import type { Expand, OptionalKeys, RequiredKeys } from '@/utility/merge';
 
-const setValue = <T extends Circle | Rectangle | Edge, K extends keyof T, V extends T[K]>(
-  obj: T,
-  prop: K,
-  value: V,
-) => {
+const setValue = <T, K extends keyof T, V extends T[K]>(obj: T, prop: K, value: V) => {
   obj[prop] = value;
 };
-
-//type LListStoreType = {
-//  circleHolder: { elems: Circle[]; maxId: number };
-//  rectHolder: { elems: Rectangle[]; maxId: number };
-//  edgeHolder: { elems: Edge[]; maxId: number };
-//};
-//type LinkedLStoreRawType = {
-//  circleHolder: { elems: Circle[]; maxId: number };
-//  rectHolder: { elems: Rectangle[]; maxId: number };
-//  edgeHolder: { elems: (Edge & { a?: string; b?: string })[]; maxId: number };
-//};
 
 const ctors: { [key in ValidObjects]: new (...args: any[]) => any } = {
   Circle: Circle,

@@ -76,9 +76,7 @@ import { useStoreManualHistory } from './useManualStoreHistory';
 
 export function useStoreHistory<S extends Store, Raw extends S['$state'], Serialized = Raw>(
   store: S,
-  options: Omit<UseRefHistoryOptions<Raw, Serialized>, 'fnSetSource'> & {
-    patchStore?: (store: S, value: Raw) => {};
-  } = {},
+  options: UseRefHistoryOptions<Raw, Serialized> = {},
 ): Omit<UseRefHistoryReturn<Raw, Serialized>, 'source'> & { store: S } {
   const { deep = false, flush = 'pre', eventFilter } = options;
 

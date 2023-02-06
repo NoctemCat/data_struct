@@ -28,7 +28,9 @@ import { RouterView } from 'vue-router';
 }
 
 body {
+  display: flex;
   background-color: var(--bg-color);
+  justify-content: center;
 }
 
 #app {
@@ -36,7 +38,10 @@ body {
   flex-direction: column;
   min-height: 100vh;
   min-height: 100dvh;
-  margin: 0 auto;
+  margin: 0;
+  flex: 1;
+
+  background: var(--app-border-color);
 }
 
 main {

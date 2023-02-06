@@ -7,11 +7,7 @@ import { useManualRefHistory, useRefHistory } from '@vueuse/core';
 import type { Circle, Edge, Rectangle } from '@/utility/classes';
 import { useStoreHistory } from './useStoreHistory';
 
-//let init = false;
 export const usePiniaHistory = () => {
-  const pinia = getActivePinia();
-  if (!pinia) throw new Error('To use pinia history store must exist');
-
   const store = useShapesStore();
 
   const stringifyShapesStore = (state: typeof store.$state): string => {
@@ -41,6 +37,5 @@ export const usePiniaHistory = () => {
   };
 
   const storeHistory = useStoreHistory(store, { dump: stringifyShapesStore, parse: parseShapesStore });
-
   return { ...storeHistory };
 };

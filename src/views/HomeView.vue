@@ -29,7 +29,7 @@ main {
   border-radius: 0.25rem;
 
   transition: color var(--theme-switch-time), background-color var(--theme-switch-time);
-  background-color: var(--app-bg-color);
+  background-color: var(--bg-color);
 }
 </style>
 

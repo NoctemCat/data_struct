@@ -69,7 +69,7 @@ header {
   flex-direction: row;
   //border-bottom: 1px solid var(--border-color);
   transition: background-color var(--theme-switch-time);
-  background-color: var(--app-bg-color);
+  background-color: var(--bg-color);
 
   @media (min-width: 1024px) {
   }

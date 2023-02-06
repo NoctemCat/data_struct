@@ -97,6 +97,7 @@ const animOnLeave = (_el: Element, done: () => void) => {
 
 <style lang="scss">
 #maingraph {
+  display: block;
   width: 100%;
   height: 100%;
 
