@@ -42,6 +42,7 @@ body {
   flex: 1;
 
   background: var(--app-border-color);
+  transition: background-color var(--theme-switch-time);
 }
 
 main {

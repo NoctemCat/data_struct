@@ -251,7 +251,7 @@ const te = typeof SearchTab;
       t('linkedList.remove'),
       t('linkedList.random'),
     ]"
-    :component-names="[CreateTab, SearchTab, InsertTab]"
+    :components="[CreateTab, SearchTab, InsertTab]"
   >
   </ContentControls>
   <!--<button @click="creatRandomListThr()">random</button>

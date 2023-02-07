@@ -1,49 +1,44 @@
 <script setup lang="ts">
 import IconClose from '@/components/icons/IconClose.vue';
-
-// eslint-disable-next-line @typescript-eslint/no-unused-vars
-import { computed, nextTick, ref, toRef, toRefs, Transition, watch } from 'vue';
+import { ref, toRef, toRefs } from 'vue';
 import gsap from 'gsap';
 import { injectStrict } from '@/utility/functions';
 import { ScreenInfoKey } from '@/utility/symbols';
 import { useMouse } from '@vueuse/core';
 
-const props = defineProps<{ buttons: string[]; componentNames: {}[] }>();
+const props = defineProps<{ buttons: string[]; components: {}[] }>();
 const buttonNames = toRef(props, 'buttons');
-const tabs = toRef(props, 'componentNames');
+const tabs = toRef(props, 'components');
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 const { x: xMouse, y: yMouse } = useMouse();
 
 const currentTab = ref<number | undefined>();
 
-const operations = ref<HTMLDivElement | null>(null);
-// All keys must be doubled
-const currentlyHovering = ref({
-  operations: false,
-});
-const menuRefs = {
-  operations: operations,
+const mouseMove = (el: MouseEvent | TouchEvent) => {
+  const elRef = el.currentTarget as HTMLDivElement;
+  if (!elRef) return;
+
+  const { x, y, width, height } = elRef.getBoundingClientRect();
+
+  const xIn = xMouse.value - x;
+  const yIn = yMouse.value - y;
+
+  const constraint = 0.24;
+  let xPercent = (xIn / width) * constraint - constraint / 2;
+  let yPercent = (yIn / height) * constraint - constraint / 2;
+
+  elRef.setAttribute('style', `--top-val: ${yPercent}rem; --left-val: ${xPercent}rem`);
 };
 
-const mouseEnter = (el: MouseEvent | TouchEvent) => {
-  const menuId = (el.currentTarget as HTMLDivElement).getAttribute('data-menu-id');
-
-  if (menuId && Object.hasOwn(currentlyHovering.value, menuId)) {
-    currentlyHovering.value[menuId as keyof typeof currentlyHovering.value] = true;
-  }
-};
 const mouseLeave = (el: MouseEvent | TouchEvent) => {
-  const menuId = (el.currentTarget as HTMLDivElement).getAttribute('data-menu-id');
+  const elem = el.currentTarget as HTMLDivElement;
 
-  if (menuId && Object.hasOwn(currentlyHovering.value, menuId)) {
-    currentlyHovering.value[menuId as keyof typeof currentlyHovering.value] = false;
-    gsap.to(menuRefs[menuId as keyof typeof menuRefs].value, {
-      '--top-val': '0.125rem',
-      '--left-val': '-0.125rem',
-      duration: 0.2,
-    });
-  }
+  gsap.to(elem, {
+    '--top-val': '0.125rem',
+    '--left-val': '-0.125rem',
+    duration: 0.2,
+  });
 };
 
 const controlsSelected = ref<HTMLButtonElement | null>(null);
@@ -54,84 +49,74 @@ const topControlEnter = (el: MouseEvent | TouchEvent | FocusEvent) => {
     const buttonStyle = getComputedStyle(current);
 
     const padding = buttonStyle.padding.substring(0, buttonStyle.padding.indexOf('px'));
-    const appMargin = rem.value / 4;
-    const newLeft = box.x - parseFloat(padding) / 2 + appMargin;
+    const appMargiLeft = rem.value / (4 * 2);
+    const newLeft = box.x - parseFloat(padding) / 2 + appMargiLeft;
 
     gsap.to(controlsSelected.value, {
       left: newLeft,
       width: box.width,
       duration: 0.2,
     });
+
+    const arrayChildren = Array.from(current.parentElement?.children ?? []);
+    arrayChildren.forEach((el) => {
+      (el as HTMLButtonElement).tabIndex = -1;
+    });
+    current.tabIndex = 0;
   }
 };
 
 const closeControls = ref<HTMLButtonElement | null>(null);
 const controlsContent = ref<HTMLDivElement | null>(null);
-const selectCategory = (index: number) => {
+const selectCategory = (ev: MouseEvent | TouchEvent, index: number) => {
+  if (!controlsContent.value) {
+    return;
+  }
   closeControls.value?.classList.remove('hidden');
   closeControls.value?.classList.add('shown');
   closeControls.value?.removeAttribute('hidden');
 
-  if (controlsContent.value) {
-    //const arrayChildren = Array.from(controlsContent.value.children);
-    //arrayChildren.forEach((el) => {
-    //  //el.setAttribute('style', 'display: gone;');
-    //  el.setAttribute('hidden', '');
-    //});
-    //const showTab = arrayChildren[index];
-
-    //console.log(showTab);
-    //showTab.removeAttribute('style');
-    //showTab.removeAttribute('hidden');
-    currentTab.value = index;
-    console.log(currentTab.value);
-    nextTick(() => {
-      controlsContent.value!.style.maxHeight = controlsContent.value!.scrollHeight + 'px';
-    });
-  }
+  controlsContent.value.style.maxHeight = controlsContent.value.scrollHeight + 'px';
+  currentTab.value = index;
 };
 
-const closeControlsFun = (_el: MouseEvent | TouchEvent) => {
+const closeControlsFun = (_ev: MouseEvent | TouchEvent) => {
   closeControls.value?.classList.remove('shown');
   closeControls.value?.classList.add('hidden');
 
   if (controlsContent.value) {
     controlsContent.value.style.maxHeight = '';
   }
+  gsap.to(controlsSelected.value, {
+    width: 0,
+    duration: 0.2,
+  });
 };
 
-watch([xMouse, yMouse], (_) => {
-  for (const [key, value] of Object.entries(currentlyHovering.value)) {
-    if (value) {
-      const elRef = menuRefs[key as keyof typeof menuRefs].value;
-
-      if (!elRef) return;
-
-      const { x, y, width, height } = elRef.getBoundingClientRect();
-
-      const xIn = xMouse.value - x;
-      const yIn = yMouse.value - y;
-
-      //* 20 - 10
-      const constraint = 0.24;
-      let xPercent = (xIn / width) * constraint - constraint / 2;
-      let yPercent = (yIn / height) * constraint - constraint / 2;
-
-      xPercent = xPercent >= -constraint / 2 ? xPercent : -constraint / 2;
-      xPercent = xPercent <= constraint / 2 ? xPercent : constraint / 2;
-
-      yPercent = yPercent >= -constraint / 2 ? yPercent : -constraint / 2;
-      yPercent = yPercent <= constraint / 2 ? yPercent : constraint / 2;
-
-      elRef.setAttribute('style', `--top-val: ${yPercent}rem; --left-val: ${xPercent}rem`);
-    }
+const tabKeyPress = (ev: KeyboardEvent) => {
+  const activeTabElem = document.activeElement as HTMLButtonElement;
+  if (activeTabElem?.role !== 'tab') {
+    return;
   }
-});
 
-//const CreateTab = defineAsyncComponent(() => import(`@/views/home/${componentNames.value[0]}.vue`));
-//CreateTab
-//const children = componentNames.value.map((name) => resolveComponent(name));
-const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.value[currentTab.value] : undefined));
+  if (ev.key === 'ArrowRight' || ev.key === 'ArrowLeft') {
+    let activeTab = parseInt(activeTabElem.id.split('-')[2]);
+    if (ev.key === 'ArrowRight') {
+      activeTab++;
+      if (activeTab >= buttonNames.value.length) {
+        activeTab = 0;
+      }
+    } else if (ev.key === 'ArrowLeft') {
+      activeTab--;
+      if (activeTab < 0) {
+        activeTab = buttonNames.value.length - 1;
+      }
+    }
+
+    const newTab = document.getElementById(`button-tab-${activeTab}`) as HTMLButtonElement;
+    newTab.focus();
+  }
+};
 </script>
 
 <template>
@@ -146,45 +131,41 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
         class="white-grad"
         data-menu-id="operations"
         style="--top-val: 0.125rem; --left-val: -0.125rem"
-        @mouseenter="mouseEnter"
         @mouseleave="mouseLeave"
-        @touchstart="mouseEnter"
         @touchend="mouseLeave"
+        @mousemove="mouseMove"
+        @touchmove="mouseMove"
+        @keydown="tabKeyPress"
       >
-        <ul class="controls-buttons">
-          <li
+        <div class="controls-buttons">
+          <button
             v-for="(name, index) in buttonNames"
+            :id="`button-tab-${index}`"
             :key="name"
+            role="tab"
+            :aria-selected="index === currentTab"
+            :aria-controls="`control-tab-${index}`"
+            :tabindex="index === 0 ? 0 : -1"
+            @mouseenter="topControlEnter"
+            @focus="topControlEnter"
+            @click="(ev) => selectCategory(ev, index)"
           >
-            <button
-              :id="`button-tab-${index}`"
-              role="tab"
-              aria-selected="false"
-              :aria-controls="`control-tab-${index}`"
-              tabindex="-1"
-              @mouseenter="topControlEnter"
-              @focus="topControlEnter"
-              @click="selectCategory(index)"
-            >
-              <span>{{ name }}</span>
-            </button>
-          </li>
-        </ul>
+            <span>{{ name }}</span>
+          </button>
+        </div>
 
         <button
-          id="closeCotrols"
           ref="closeControls"
-          class=""
-          hidden
+          class="close-controls"
+          @click="closeControlsFun"
           @mouseenter="topControlEnter"
           @focus="topControlEnter"
-          @click="closeControlsFun"
         >
           <IconClose />
         </button>
         <div
-          id="controlsSelected"
           ref="controlsSelected"
+          class="controls-selected"
         ></div>
       </div>
 
@@ -192,20 +173,22 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
         ref="controlsContent"
         class="cotrols-content"
       >
-        <Transition
-          name="controls-content"
-          mode="out-in"
+        <template
+          v-for="(tab, index) in tabs"
+          :key="index"
         >
-          <template v-if="activeTab">
-            <component
-              :is="activeTab"
-              :id="`control-tab-${currentTab}`"
-              role="tabpanel"
-              tabindex="0"
-              :aria-labelledby="`button-tab-${currentTab}`"
-            ></component>
-          </template>
-        </Transition>
+          <div
+            :id="`control-tab-${index}`"
+            class="tab-wrapper"
+            :style="`transform: translateX(-${100 * (currentTab ?? 0)}%);`"
+            role="tabpanel"
+            tabindex="0"
+            :aria-labelledby="`button-tab-${index}`"
+            :aria-hidden="index === currentTab ? false : true"
+          >
+            <component :is="tab"></component>
+          </div>
+        </template>
       </div>
     </div>
   </div>
@@ -217,6 +200,7 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
   display: grid;
   //grid-template-columns: 3fr 1fr;
   max-width: 64rem;
+  //visibility: hidden;
 
   .white-grad {
     display: flex;
@@ -235,7 +219,7 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
       background-color: var(--bg-color);
       content: '';
       position: absolute;
-      width: calc(100% - 0.25rem);
+      width: calc(100% - 0.125rem);
       height: calc(100% - 0.25rem);
       border-radius: 2.5% / 50% 0 50% 0;
       pointer-events: none;
@@ -246,7 +230,7 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
       transition: 0.25s;
     }
   }
-  #controlsSelected {
+  .controls-selected {
     position: absolute;
     width: 4rem;
     height: 100%;
@@ -281,7 +265,7 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
   cursor: pointer;
 }
 
-#closeCotrols {
+.close-controls {
   position: absolute;
   top: 0;
   right: 0;
@@ -337,26 +321,23 @@ const activeTab = computed(() => (typeof currentTab.value === 'number' ? tabs.va
 }
 
 .cotrols-content {
+  display: flex;
+  flex-direction: row;
   max-height: 0;
   overflow: hidden;
   transition: all 0.2s ease-in-out;
   background: var(--bg-color);
+  border-right: 0.25rem solid var(--app-border-color);
+  //gap: 0.25rem;
+  transition: all 0.2s ease-in-out, color var(--theme-switch-time), background-color var(--theme-switch-time),
+    border var(--theme-switch-time);
 }
 
-.controls-content-enter-active {
-  transition: transform 0.3s ease-out, opacity 0.3s ease-out;
-}
+.tab-wrapper {
+  //position: absolute;
+  flex-shrink: 0;
+  width: 100%;
 
-.controls-content-leave-active {
-  transition: transform 0.4s ease, opacity 0.4s ease;
-}
-
-.controls-content-enter-from {
-  transform: translateX(20px);
-  opacity: 0;
-}
-.controls-content-leave-to {
-  transform: translateX(-20px);
-  opacity: 0;
+  transition: transform 0.25s ease-in;
 }
 </style>
