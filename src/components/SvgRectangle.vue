@@ -11,7 +11,7 @@ const props = defineProps<{ rectangle: Rectangle }>();
 const rectangle = toRef(props, 'rectangle');
 const copy: Rectangle = structuredClone(toRaw(rectangle.value));
 
-const duration = 1;
+const duration = 0.75;
 const ease = 'power3';
 
 const adjusted = () => {

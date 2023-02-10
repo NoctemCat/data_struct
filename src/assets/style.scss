@@ -56,7 +56,9 @@ html.dark {
 *,
 *::before,
 *::after {
-  box-sizing: border-box;
+  -webkit-box-sizing: border-box;
+  -moz-box-sizing: border-box;   
+  box-sizing: border-box;  
   margin: 0;
   padding: 0;
   position: relative;
@@ -96,4 +98,13 @@ ul {
   padding: 0;
   margin: 0;
   list-style: none;
+}
+
+input {
+  outline: 0;
+  border: 0;
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+  transition: color var(--theme-switch-time), background-color var(--theme-switch-time);
 }

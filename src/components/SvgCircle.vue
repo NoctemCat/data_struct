@@ -11,7 +11,7 @@ const props = defineProps<{ circle: Circle }>();
 const circle = toRef(props, 'circle');
 const copy: Circle = structuredClone(toRaw(circle.value));
 
-const duration = 1;
+const duration = 0.75;
 const ease = 'power3';
 
 const groupRef = ref<SVGGElement | null>(null);

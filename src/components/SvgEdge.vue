@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { onBeforeUnmount, onMounted, onUpdated, reactive, toRaw, toRef, watch } from 'vue';
+import { onBeforeUnmount, onMounted, reactive, ref, toRaw, toRef, watch } from 'vue';
 import gsap from 'gsap';
 import type { Circle, Edge, Rectangle } from '@/utility/classes';
 import type { Point } from '@/utility/types';
@@ -10,8 +10,11 @@ const edge = toRef(props, 'edge');
 
 const copyId: string = structuredClone(toRaw(edge.value.id));
 const edgeColor = reactive({ color: edge.value.color });
-const duration = 1.2;
-const easeFunc = 'power3';
+const duration = 0.75;
+const easeFunc = 'power3.out';
+
+const forwardRef = ref<SVGPathElement | null>(null);
+const backwardRef = ref<SVGPathElement | null>(null);
 
 const calculateDPath = (a?: Point, b?: Point) => {
   if (!a || !b) {
@@ -34,10 +37,10 @@ const endBackPath = `M${first.x},${first.y}L${second.x},${second.y}`;
 
 onMounted(() => {
   if (edge.value.forward) {
-    gsap.fromTo(`#edgeForward${copyId}`, { attr: { d: begPath } }, { attr: { d: endForwPath }, duration: duration });
+    gsap.fromTo(forwardRef.value, { attr: { d: begPath } }, { attr: { d: endForwPath }, duration: duration });
   }
   if (edge.value.backward) {
-    gsap.fromTo(`#edgeBackward${copyId}`, { attr: { d: begPath } }, { attr: { d: endBackPath }, duration: duration });
+    gsap.fromTo(backwardRef.value, { attr: { d: begPath } }, { attr: { d: endBackPath }, duration: duration });
   }
 });
 
@@ -46,14 +49,14 @@ onBeforeUnmount(() => {
   const begPathAdj = `M${firstDot.x},${firstDot.y}L${firstDot.x},${firstDot.y}`;
 
   if (edge.value.forward) {
-    gsap.to(`#edgeForward${copyId}`, {
+    gsap.to(forwardRef.value, {
       attr: { d: begPathAdj },
       duration: duration,
       ease: easeFunc,
     });
   }
   if (edge.value.backward) {
-    gsap.to(`#edgeBackward${copyId}`, {
+    gsap.to(backwardRef.value, {
       attr: { d: begPath },
       duration: duration,
       ease: easeFunc,
@@ -68,14 +71,14 @@ watch(props, (_) => {
   const newEndBackPath = `M${first.x},${first.y}L${second.x},${second.y}`;
 
   if (edge.value.forward) {
-    gsap.to(`#edgeForward${copyId}`, {
+    gsap.to(forwardRef.value, {
       attr: { d: newEndForwPath },
       duration: duration,
       ease: easeFunc,
     });
   }
   if (edge.value.backward) {
-    gsap.to(`#edgeBackward${copyId}`, {
+    gsap.to(backwardRef.value, {
       attr: { d: newEndBackPath },
       duration: duration,
       ease: easeFunc,
@@ -90,14 +93,14 @@ watch(props, (_) => {
   <g>
     <path
       v-if="edge.forward"
-      :id="`edgeForward${copyId}`"
+      ref="forwardRef"
       :stroke="edgeColor.color"
       stroke-width=".125rem"
       style="marker-start: url('#arrow')"
     />
     <path
       v-if="edge.backward"
-      :id="`edgeBackward${copyId}`"
+      ref="backwardRef"
       :stroke="edgeColor.color"
       stroke-width=".125rem"
       style="marker-start: url('#arrow')"

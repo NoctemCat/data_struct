@@ -1,4 +1,4 @@
-import { createApp, reactive, watch } from 'vue';
+import { createApp, reactive } from 'vue';
 import { createPinia } from 'pinia';
 import { createI18n } from 'vue-i18n';
 
@@ -7,7 +7,6 @@ import router from './router';
 import type { ScreenInfo } from './utility/types';
 import { ScreenInfoKey } from './utility/symbols';
 import { convertRemToPixels } from './utility/functions';
-import { usePiniaHistory } from './stores/history';
 
 const screen = reactive<ScreenInfo>({
   width: window.innerWidth,
@@ -37,5 +36,3 @@ app.use(i18n);
 app.mount('#app');
 
 app.provide(ScreenInfoKey, screen);
-
-const emp = usePiniaHistory();

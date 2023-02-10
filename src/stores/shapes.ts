@@ -76,21 +76,10 @@ export const useShapesStore = defineStore('shapes', () => {
   const rectMaxId = ref<number>(0);
   const edgeMaxId = ref<number>(0);
 
-  const printState = () => {
-    //console.log(storeState.value);
-  };
-
-  //this.$state;
-  //const init = (state) => {
-  //  //this.;
-  //  console.log(state);
-  //};
-
   return {
     circleFuncs: prepareSetters(circles, circleMaxId),
     rectsFuncs: prepareSetters(rects, rectMaxId),
     edgeFuncs: prepareSetters(edges, edgeMaxId),
-    printState,
     circles,
     rects,
     edges,

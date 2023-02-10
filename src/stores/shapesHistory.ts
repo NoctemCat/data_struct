@@ -1,13 +1,20 @@
-import { once } from '@/utility/functions';
 //import { useRefHistory } from "@vueuse/core";
-import { getActivePinia, storeToRefs, type StateTree, type Store } from 'pinia';
-import { toRaw, unref, watch, type Ref } from 'vue';
-import { useShapesStore } from '@/stores/linkedlist';
-import { useManualRefHistory, useRefHistory } from '@vueuse/core';
+import type { Store } from 'pinia';
+import { useShapesStore } from '@/stores/shapes';
+import type { UseManualRefHistoryReturn } from '@vueuse/core';
 import type { Circle, Edge, Rectangle } from '@/utility/classes';
-import { useStoreHistory } from './useStoreHistory';
+import { useStoreManualHistory } from './useManualStoreHistory';
 
-export const usePiniaHistory = () => {
+const storetemp = useShapesStore();
+
+let storeHistory: Omit<UseManualRefHistoryReturn<typeof storetemp.$state, typeof storetemp.$state>, 'source'> & {
+  store: typeof storetemp;
+};
+export const useShapesHistory = () => {
+  if (storeHistory) {
+    return { ...storeHistory };
+  }
+
   const store = useShapesStore();
 
   const stringifyShapesStore = (state: typeof store.$state): string => {
@@ -36,6 +43,9 @@ export const usePiniaHistory = () => {
     return parsed;
   };
 
-  const storeHistory = useStoreHistory(store, { dump: stringifyShapesStore, parse: parseShapesStore });
+  storeHistory = useStoreManualHistory(store, {
+    dump: stringifyShapesStore,
+    parse: parseShapesStore,
+  }) as typeof storeHistory;
   return { ...storeHistory };
 };

@@ -44,6 +44,8 @@ export function useStoreManualHistory<S extends Store, Raw extends S['$state'], 
     };
   }
 
+  const beginValue = _createHistoryRecord();
+
   const last: Ref<UseRefHistoryRecord<Serialized>> = ref(_createHistoryRecord()) as Ref<
     UseRefHistoryRecord<Serialized>
   >;
@@ -89,7 +91,8 @@ export function useStoreManualHistory<S extends Store, Raw extends S['$state'], 
   };
 
   const reset = () => {
-    _setSource(last.value);
+    _setSource(beginValue);
+    clear();
   };
 
   const history = computed(() => [last.value, ...undoStack.value]);

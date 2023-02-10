@@ -5,21 +5,24 @@ import gsap from 'gsap';
 import { injectStrict } from '@/utility/functions';
 import { ScreenInfoKey } from '@/utility/symbols';
 import { useMouse } from '@vueuse/core';
+import { useMouseScrollable } from './useMouseScrollable';
 
+const { mouseDownHandler } = useMouseScrollable();
 const props = defineProps<{ buttons: string[]; components: {}[] }>();
 const buttonNames = toRef(props, 'buttons');
 const tabs = toRef(props, 'components');
 
+const operations = ref<HTMLDivElement | null>(null);
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 const { x: xMouse, y: yMouse } = useMouse();
 
 const currentTab = ref<number | undefined>();
 
 const mouseMove = (el: MouseEvent | TouchEvent) => {
-  const elRef = el.currentTarget as HTMLDivElement;
-  if (!elRef) return;
+  const elem = el.currentTarget as HTMLDivElement;
+  if (!elem) return;
 
-  const { x, y, width, height } = elRef.getBoundingClientRect();
+  const { x, y, width, height } = elem.getBoundingClientRect();
 
   const xIn = xMouse.value - x;
   const yIn = yMouse.value - y;
@@ -28,15 +31,18 @@ const mouseMove = (el: MouseEvent | TouchEvent) => {
   let xPercent = (xIn / width) * constraint - constraint / 2;
   let yPercent = (yIn / height) * constraint - constraint / 2;
 
-  elRef.setAttribute('style', `--top-val: ${yPercent}rem; --left-val: ${xPercent}rem`);
+  const scrollRem = elem.scrollLeft / rem.value;
+
+  elem.setAttribute('style', `--top-val: ${yPercent}rem; --left-val: ${xPercent + scrollRem}rem`);
 };
 
 const mouseLeave = (el: MouseEvent | TouchEvent) => {
   const elem = el.currentTarget as HTMLDivElement;
 
+  const scrollRem = elem.scrollLeft / rem.value;
   gsap.to(elem, {
     '--top-val': '0.125rem',
-    '--left-val': '-0.125rem',
+    '--left-val': `${scrollRem - 0.125}rem`,
     duration: 0.2,
   });
 };
@@ -46,11 +52,11 @@ const topControlEnter = (el: MouseEvent | TouchEvent | FocusEvent) => {
   const current = el.currentTarget as HTMLButtonElement;
   if (controlsSelected.value && !current.classList.contains('hidden')) {
     const box = current.getBoundingClientRect();
-    const buttonStyle = getComputedStyle(current);
+    const parent = current.parentElement!.getBoundingClientRect();
 
-    const padding = buttonStyle.padding.substring(0, buttonStyle.padding.indexOf('px'));
-    const appMargiLeft = rem.value / (4 * 2);
-    const newLeft = box.x - parseFloat(padding) / 2 + appMargiLeft;
+    // add scroll only if direct child
+    const scroll = operations.value === current.parentElement ? operations.value?.scrollLeft ?? 0 : 0;
+    const newLeft = box.x - parent.x + scroll;
 
     gsap.to(controlsSelected.value, {
       left: newLeft,
@@ -117,158 +123,165 @@ const tabKeyPress = (ev: KeyboardEvent) => {
     newTab.focus();
   }
 };
+const elemScroll = (e: Event) => {
+  const elem = e.currentTarget as HTMLDivElement;
+  const scrollRem = elem.scrollLeft / rem.value;
+  gsap.to(elem, {
+    '--top-val': '0.125rem',
+    '--left-val': `${scrollRem - 0.125}rem`,
+    duration: 0.2,
+  });
+};
 </script>
 
 <template>
-  <div class="content-controls">
+  <div
+    class="operations"
+    role="tablist"
+    aria-label="Operations Tabs"
+  >
     <div
-      class="operations"
-      role="tablist"
-      aria-label="Operations Tabs"
+      ref="operations"
+      class="white-grad"
+      data-menu-id="operations"
+      style="--top-val: 0.125rem; --left-val: -0.125rem"
+      @mouseleave="mouseLeave"
+      @touchend="mouseLeave"
+      @mousemove="mouseMove"
+      @touchmove="mouseMove"
+      @scroll="elemScroll"
+      @keydown="tabKeyPress"
+      @mousedown="mouseDownHandler"
     >
-      <div
-        ref="operations"
-        class="white-grad"
-        data-menu-id="operations"
-        style="--top-val: 0.125rem; --left-val: -0.125rem"
-        @mouseleave="mouseLeave"
-        @touchend="mouseLeave"
-        @mousemove="mouseMove"
-        @touchmove="mouseMove"
-        @keydown="tabKeyPress"
-      >
-        <div class="controls-buttons">
-          <button
-            v-for="(name, index) in buttonNames"
-            :id="`button-tab-${index}`"
-            :key="name"
-            role="tab"
-            :aria-selected="index === currentTab"
-            :aria-controls="`control-tab-${index}`"
-            :tabindex="index === 0 ? 0 : -1"
-            @mouseenter="topControlEnter"
-            @focus="topControlEnter"
-            @click="(ev) => selectCategory(ev, index)"
-          >
-            <span>{{ name }}</span>
-          </button>
-        </div>
-
+      <div class="controls-buttons">
         <button
-          ref="closeControls"
-          class="close-controls"
-          @click="closeControlsFun"
+          v-for="(name, index) in buttonNames"
+          :id="`button-tab-${index}`"
+          :key="name"
+          role="tab"
+          :aria-selected="index === currentTab"
+          :aria-controls="`control-tab-${index}`"
+          :tabindex="index === 0 ? 0 : -1"
           @mouseenter="topControlEnter"
           @focus="topControlEnter"
+          @click="(ev) => selectCategory(ev, index)"
         >
-          <IconClose />
+          <span>{{ name }}</span>
         </button>
-        <div
-          ref="controlsSelected"
-          class="controls-selected"
-        ></div>
       </div>
 
-      <div
-        ref="controlsContent"
-        class="cotrols-content"
+      <button
+        ref="closeControls"
+        class="close-controls"
+        @click="closeControlsFun"
+        @mouseenter="topControlEnter"
+        @focus="topControlEnter"
       >
-        <template
-          v-for="(tab, index) in tabs"
-          :key="index"
+        <IconClose />
+      </button>
+      <div
+        ref="controlsSelected"
+        class="controls-selected"
+      ></div>
+    </div>
+
+    <div
+      ref="controlsContent"
+      class="cotrols-content"
+    >
+      <template
+        v-for="(tab, index) in tabs"
+        :key="index"
+      >
+        <div
+          :id="`control-tab-${index}`"
+          class="tab-wrapper"
+          :style="`transform: translateX(-${100 * (currentTab ?? 0)}%);`"
+          role="tabpanel"
+          tabindex="0"
+          :aria-labelledby="`button-tab-${index}`"
+          :aria-hidden="index === currentTab ? false : true"
         >
-          <div
-            :id="`control-tab-${index}`"
-            class="tab-wrapper"
-            :style="`transform: translateX(-${100 * (currentTab ?? 0)}%);`"
-            role="tabpanel"
-            tabindex="0"
-            :aria-labelledby="`button-tab-${index}`"
-            :aria-hidden="index === currentTab ? false : true"
-          >
-            <component :is="tab"></component>
-          </div>
-        </template>
-      </div>
+          <component :is="tab"></component>
+        </div>
+      </template>
     </div>
   </div>
 </template>
 
 <style lang="scss" scoped>
-.content-controls {
-  position: relative;
+.operations {
   display: grid;
-  //grid-template-columns: 3fr 1fr;
-  max-width: 64rem;
-  //visibility: hidden;
-
-  .white-grad {
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    background: var(--app-border-color);
-    border-radius: 2.5% / 50% 0 50% 0;
-    border-radius: 0;
-    position: relative;
-    z-index: 0;
-    transition: background-color var(--theme-switch-time);
-    overflow: hidden;
-
-    &::before {
-      transition: background-color var(--theme-switch-time);
-      background-color: var(--bg-color);
-      content: '';
-      position: absolute;
-      width: calc(100% - 0.125rem);
-      height: calc(100% - 0.25rem);
-      border-radius: 2.5% / 50% 0 50% 0;
-      pointer-events: none;
-      translate: var(--left-val) var(--top-val);
-    }
-
-    &:hover {
-      transition: 0.25s;
-    }
-  }
-  .controls-selected {
-    position: absolute;
-    width: 4rem;
-    height: 100%;
-
-    top: 0;
-    left: -150%;
-    content: '';
-    backdrop-filter: invert(1);
-    pointer-events: none;
-  }
-
-  .controls-buttons {
-    display: flex;
-    flex-direction: row;
-
-    button {
-      background: transparent;
-      font-family: inherit;
-      box-sizing: content-box;
-      border: 0;
-      margin: 0;
-      padding: 0.75rem 2rem;
-      color: var(--text-color);
-
-      font-size: 1.25rem;
-    }
-  }
 }
 
-.accordion {
-  outline: none;
-  cursor: pointer;
+.white-grad {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--app-border-color);
+  border-radius: 2.5% / 50% 0 50% 0;
+  border-radius: 0;
+  position: relative;
+  z-index: 0;
+  transition: background-color var(--theme-switch-time);
+  overflow-x: auto;
+
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+  &::-webkit-scrollbar {
+    background: transparent;
+    width: 0;
+    height: 0;
+  }
+
+  &::before {
+    transition: background-color var(--theme-switch-time);
+    background-color: var(--bg-color);
+    content: '';
+    position: absolute;
+    width: calc(100% - 0.125rem);
+    height: calc(100% - 0.25rem);
+    border-radius: 2.5% / 50% 0 50% 0;
+    pointer-events: none;
+    translate: var(--left-val) var(--top-val);
+  }
+
+  &:hover {
+    transition: 0.25s;
+  }
+}
+.controls-selected {
+  position: absolute;
+  width: 4rem;
+  height: 100%;
+
+  top: 0;
+  left: -150%;
+  content: '';
+  backdrop-filter: invert(1);
+  pointer-events: none;
+}
+
+.controls-buttons {
+  display: flex;
+  flex-direction: row;
+
+  button {
+    cursor: pointer;
+    background: transparent;
+    font-family: inherit;
+    box-sizing: content-box;
+    border: 0;
+    margin: 0;
+    padding: 0.75rem 2rem;
+    color: var(--text-color);
+
+    font-size: 1.25rem;
+  }
 }
 
 .close-controls {
-  position: absolute;
-  top: 0;
-  right: 0;
+  cursor: pointer;
   height: 100%;
   aspect-ratio: 1;
   background: transparent;
@@ -334,7 +347,6 @@ const tabKeyPress = (ev: KeyboardEvent) => {
 }
 
 .tab-wrapper {
-  //position: absolute;
   flex-shrink: 0;
   width: 100%;
 

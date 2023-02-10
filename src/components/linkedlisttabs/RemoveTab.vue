@@ -1,7 +1,7 @@
 <script setup lang="ts"></script>
 
 <template>
-  <div>Tab Create</div>
+  <div>Tab Remove</div>
 </template>
 
 <style></style>
