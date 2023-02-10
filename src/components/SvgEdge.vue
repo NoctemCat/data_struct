@@ -16,12 +16,12 @@ const easeFunc = 'power3.out';
 const forwardRef = ref<SVGPathElement | null>(null);
 const backwardRef = ref<SVGPathElement | null>(null);
 
-const calculateDPath = (a?: Point, b?: Point) => {
+const calculateDPath = (a?: Point, b?: Point, adj = 0) => {
   if (!a || !b) {
     return { firstDot: { x: 0, y: 0 }, secondDot: { x: 0, y: 0 } };
   }
-  const firstDot = a.objType === 'Circle' ? pointOnCircle(a as Circle, b) : pointOnRect(a as Rectangle, b);
-  const secondDot = b.objType === 'Circle' ? pointOnCircle(b as Circle, a) : pointOnRect(b as Rectangle, a);
+  const firstDot = a.objType === 'Circle' ? pointOnCircle(a as Circle, b, adj) : pointOnRect(a as Rectangle, b);
+  const secondDot = b.objType === 'Circle' ? pointOnCircle(b as Circle, a, adj) : pointOnRect(b as Rectangle, a);
 
   return {
     firstDot,
@@ -45,8 +45,8 @@ onMounted(() => {
 });
 
 onBeforeUnmount(() => {
-  const { firstDot } = calculateDPath(edge.value.a, edge.value.b);
-  const begPathAdj = `M${firstDot.x},${firstDot.y}L${firstDot.x},${firstDot.y}`;
+  const { firstDot } = calculateDPath(edge.value.a, edge.value.b, -2);
+  const begPathAdj = `M${first.x},${first.y}L${firstDot.x},${firstDot.y}`;
 
   if (edge.value.forward) {
     gsap.to(forwardRef.value, {

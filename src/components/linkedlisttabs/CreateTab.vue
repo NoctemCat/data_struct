@@ -13,7 +13,7 @@ const { mouseDownHandler } = useMouseScrollable();
 
 const { circles, rects, edges } = storeToRefs(useShapesStore());
 const { circleFuncs, rectsFuncs, edgeFuncs } = useShapesStore();
-const { commit, history, reset, undo, last } = useShapesHistory();
+const { commit, history, reset, undo, last, clear } = useShapesHistory();
 
 const { rem } = toRefs(injectStrict(ScreenInfoKey));
 const container = ref<HTMLDivElement | null>(null);
@@ -66,7 +66,7 @@ onMounted(() => {
   userDefined.value = generateStringArray();
 });
 
-const createEdge = (a: Point, b: Point) => {
+const addEdge = (a: Point, b: Point) => {
   const edge = {
     objType: 'Edge' as ValidObjects,
     a: a,
@@ -101,8 +101,10 @@ const createArray = (newSize: number, numbers: string[]) => {
   circleFuncs.updateByIndex(circles.value.length - 1, { caption: 'tail' });
 
   for (let i = 1; i < circles.value.length; i++) {
-    createEdge(circles.value[i - 1], circles.value[i]);
+    addEdge(circles.value[i - 1], circles.value[i]);
   }
+  commit();
+  clear();
 };
 
 const setEmpty = async () => {
@@ -115,7 +117,6 @@ const createRandom = async () => {
   const numbers = [...Array(newSize).keys()].map((_) => randomNumber().toString());
 
   createArray(newSize, numbers);
-  commit();
   console.log(history.value);
 };
 
@@ -128,7 +129,6 @@ const createRandomSorted = async () => {
     .map((el) => el.toString());
 
   createArray(newSize, numbers);
-  commit();
 };
 
 const createRandomFixed = async () => {
@@ -155,7 +155,6 @@ const createUserDefined = async () => {
 
   createArray(numbers.length, numbers);
   userDefined.value = generateStringArray();
-  commit();
 };
 </script>
 
@@ -205,7 +204,7 @@ const createUserDefined = async () => {
       class="js-close"
     >
       <button
-        class="button-svg"
+        class="button-close"
         @click="close"
       >
         <span><IconBack /></span>
@@ -253,14 +252,18 @@ const createUserDefined = async () => {
     background: #7c7c7c0f;
   }
 
-  .button-svg {
+  .button-close {
     flex-shrink: 0;
     box-sizing: content-box;
     border: 0;
     padding: 0;
     background: transparent;
+    width: 3rem;
+    height: 3rem;
 
     border-right: 2px solid var(--app-border-color);
+    transition: color var(--theme-switch-time), background-color var(--theme-switch-time),
+      border var(--theme-switch-time);
 
     &:focus,
     &:hover {
@@ -274,7 +277,7 @@ const createUserDefined = async () => {
       height: 100%;
     }
 
-    svg {
+    :deep(svg) {
       position: absolute;
       top: 0;
       left: 0;

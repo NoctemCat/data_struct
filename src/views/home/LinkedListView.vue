@@ -9,11 +9,24 @@ import InsertTab from '@/components/linkedlisttabs/InsertTab.vue';
 import SearchTab from '@/components/linkedlisttabs/SearchTab.vue';
 import RemoveTab from '@/components/linkedlisttabs/RemoveTab.vue';
 import { useI18n } from 'vue-i18n';
+import { useShapesHistory } from '@/stores/shapesHistory';
+import { computed } from 'vue';
+import { useTimelineStore } from '@/stores/timeline';
+
+const { commit, history, reset, undo, redo, clear, parseHistory } = useShapesHistory();
 
 const { t } = useI18n({ useScope: 'local' });
 
-const { circles, rects, edges } = storeToRefs(useShapesStore());
+//const { circles, rects, edges } = storeToRefs(useShapesStore());
+const { circles, rects, edges } = storeToRefs(useTimelineStore());
 //const { circleFuncs, rectsFuncs, edgeFuncs, printState } = useShapesStore();
+
+//console.log(history.value[0].snapshot);
+
+//const parsedHistory = computed(() => parseHistory(history.value[0].snapshot as unknown as string));
+//const circlesHistory = computed(() => parsedHistory.value.circles);
+//const rectsHistory = computed(() => parsedHistory.value.rects);
+//const edgesHistory = computed(() => parsedHistory.value.edges);
 </script>
 
 <template>

@@ -40,11 +40,11 @@ const pointOnRect = (a: Rectangle, { x, y }: Point) => {
   return { x: x, y: y };
 };
 
-const pointOnCircle = (a: Circle, { x, y }: Point) => {
+const pointOnCircle = (a: Circle, { x, y }: Point, adjRad = 0) => {
   const angle = -(Math.atan2(a.y - y, a.x - x) + Math.PI * 0.5);
 
-  const ax = Math.round(a.radius * Math.sin(angle));
-  const ay = Math.round(a.radius * Math.cos(angle));
+  const ax = Math.round((a.radius + adjRad) * Math.sin(angle));
+  const ay = Math.round((a.radius + adjRad) * Math.cos(angle));
 
   return { x: a.x + ax, y: a.y + ay };
 };

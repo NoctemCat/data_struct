@@ -11,8 +11,8 @@ class Circle {
   caption? = '';
   borderColor? = 'var(--circle-border)';
   fillColor? = 'var(--circle-fill)';
-  textColor? = 'var(--circle-text-border)';
-  captionColor? = 'var(--circle-caption-border)';
+  textColor? = 'var(--circle-text)';
+  captionColor? = 'var(--circle-caption)';
 
   constructor(vars: Omit<Partial<Circle>, 'id'> & { id: string | number; x: number; y: number; radius: number }) {
     this.objType = 'Circle' as ValidObjects;
@@ -39,8 +39,8 @@ class Rectangle {
   caption? = '';
   borderColor? = 'var(--rectangle-border)';
   fillColor? = 'var(--rectangle-fill)';
-  textColor? = 'var(--rectangle-text-border)';
-  captionColor? = 'var(--rectangle-caption-border)';
+  textColor? = 'var(--rectangle-text)';
+  captionColor? = 'var(--rectangle-caption)';
 
   constructor(
     vars: Omit<Partial<Rectangle>, 'id'> & {

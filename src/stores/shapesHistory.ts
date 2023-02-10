@@ -4,12 +4,11 @@ import { useShapesStore } from '@/stores/shapes';
 import type { UseManualRefHistoryReturn } from '@vueuse/core';
 import type { Circle, Edge, Rectangle } from '@/utility/classes';
 import { useStoreManualHistory } from './useManualStoreHistory';
+import type { Raw } from 'vue';
 
 const storetemp = useShapesStore();
 
-let storeHistory: Omit<UseManualRefHistoryReturn<typeof storetemp.$state, typeof storetemp.$state>, 'source'> & {
-  store: typeof storetemp;
-};
+let storeHistory: ReturnType<typeof useStoreManualHistory>;
 export const useShapesHistory = () => {
   if (storeHistory) {
     return { ...storeHistory };

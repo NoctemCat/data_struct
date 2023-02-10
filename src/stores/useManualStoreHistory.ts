@@ -29,7 +29,7 @@ export function useStoreManualHistory<S extends Store, Raw extends S['$state'], 
   options: Omit<UseManualRefHistoryOptions<Raw, Serialized>, 'setSource'> & {
     patchStore?: (store: S, value: Raw) => void;
   } = {},
-): Omit<UseManualRefHistoryReturn<Raw, Serialized>, 'source'> & { store: S } {
+) {
   const {
     clone = false,
     dump = defaultDump<Raw, Serialized>(clone),
@@ -95,6 +95,11 @@ export function useStoreManualHistory<S extends Store, Raw extends S['$state'], 
     clear();
   };
 
+  const toFirstHistory = () => {
+    _setSource(history.value[history.value.length - 1]);
+    clear();
+  };
+
   const history = computed(() => [last.value, ...undoStack.value]);
 
   const canUndo = computed(() => undoStack.value.length > 0);
@@ -114,5 +119,7 @@ export function useStoreManualHistory<S extends Store, Raw extends S['$state'], 
     reset,
     undo,
     redo,
+    parseHistory: parse,
+    toFirstHistory,
   };
 }

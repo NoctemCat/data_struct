@@ -74,7 +74,7 @@ const topControlEnter = (el: MouseEvent | TouchEvent | FocusEvent) => {
 
 const closeControls = ref<HTMLButtonElement | null>(null);
 const controlsContent = ref<HTMLDivElement | null>(null);
-const selectCategory = (ev: MouseEvent | TouchEvent, index: number) => {
+const selectCategory = (index: number) => {
   if (!controlsContent.value) {
     return;
   }
@@ -164,7 +164,7 @@ const elemScroll = (e: Event) => {
           :tabindex="index === 0 ? 0 : -1"
           @mouseenter="topControlEnter"
           @focus="topControlEnter"
-          @click="(ev) => selectCategory(ev, index)"
+          @click="selectCategory(index)"
         >
           <span>{{ name }}</span>
         </button>

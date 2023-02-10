@@ -12,6 +12,7 @@
   //--app-bg-color: white;
   --app-border-color: #101113;
   --text-color: #020202;
+  --text-color-inverted: #fdfdfd;
 
   --hover-color: #d9d9d9;
   --border-color: #7f398f;
@@ -20,21 +21,26 @@
   --theme-switch-time: 0.5s;
 
   --color: #8c6b16;
-  --color2: #4cd4a5;
+  --success-color: #32c08e;
   --color: #d9ab38;
   --color: #d1d1d1;
 
   --circle-border: #333;
+  --circle-border: var(--app-border-color);
+  
   --circle-fill: #eee;
-  --circle-text-border: #333;
-  --circle-caption-border: red;
-
+  --circle-fill: var(--bg-color);
+  --circle-text: #333;
+  --circle-text: var(--text-color);
+  --circle-caption: red;
+  
   --edge-color: #333;
+  --edge-color: var(--app-border-color);
 
   --rectangle-border: #333;
   --rectangle-fill: #eee;
-  --rectangle-text-border: #333;
-  --rectangle-caption-border: red;
+  --rectangle-text: #333;
+  --rectangle-caption: red;
 
   --power3-in: cubic-bezier(0.52, 0, 0.74, 0);
   --power3-out: cubic-bezier(0.26, 1, 0.48, 1);
@@ -48,6 +54,8 @@ html.dark {
   --bg-color: #101113;
   --app-border-color: #cfcfcf;
   --text-color: #d1d1d1;
+  --text-color-inverted: #2e2e2e;
+
 
   --hover-color: #282c30;
 
